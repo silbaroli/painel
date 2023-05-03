@@ -1,0 +1,7 @@
+uf=c("Rondônia"="RO","Acre"="AC","Amazonas"="AM","Pará"="PA","Roraima"="RR",
+     "Amapá"="AP","Tocantins"="TO","Maranhão"="MA","Piauí"="PI","Ceará"="CE",
+     "Rio Grande do Norte"="RN","Paraíba"="PB","Pernambuco"="PE","Alagoas"="AL",
+     "Sergipe"="SE","Bahia"="BA","Minas Gerais"="MG","Espírito Santo"="ES",
+     "Rio de Janeiro"="RJ","São Paulo"="SP","Paraná"="PR","Santa Catarina"="SC",
+     "Rio Grande do Sul"="RS","Mato Grosso do Sul"="MS","Mato Grosso"="MT",
+     "Goiás"="GO","Distrito Federal"="DF","Não informado")

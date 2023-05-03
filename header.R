@@ -1,0 +1,1 @@
+header <- dashboardHeader(disable = TRUE)

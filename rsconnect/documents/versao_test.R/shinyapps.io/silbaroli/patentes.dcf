@@ -1,0 +1,14 @@
+name: patentes
+title: patentes
+username:
+account: silbaroli
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8266989
+bundleId: 7170438
+url: https://silbaroli.shinyapps.io/patentes/
+when: 1683140838.14221
+lastSyncTime: 1683140838.14222
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|app.R|categorias_iea.csv|countries.R|data.zip|fun_shinyInput.R|header.R|page.R|patentes_02Mai2023.db|patentes.db.zip|sidebar.R|tab_categoria.R|tab_cooperacao.R|tab_depositante1.R|tab_depositante2.R|tab_evolucao.R|tab_explorar.R|tab_inventor.R|tab_status.R|uf.R|data
