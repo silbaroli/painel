@@ -268,7 +268,7 @@ uf=c("Rondônia"="RO","Acre"="AC","Amazonas"="AM","Pará"="PA","Roraima"="RR",
      "Rio Grande do Sul"="RS","Mato Grosso do Sul"="MS","Mato Grosso"="MT",
      "Goiás"="GO","Distrito Federal"="DF","Não informado")
 
-cat=read.csv("https://raw.githubusercontent.com/silbaroli/painel_patentes/main/categorias_iea.csv")
+cat=read.csv("https://raw.githubusercontent.com/silbaroli/painel/main/data/categorias_iea.csv")
 cat$nivel1=stringr::str_replace_all(cat$nivel1,"iea","")
 cat$nivel2=stringr::str_replace_all(cat$nivel2,"iea","")
 
@@ -322,7 +322,6 @@ page <- dashboardBody(
       categoria,
       status,
       origem,
-      inventor,
       cooperacao,
       explorar
     )
@@ -427,10 +426,10 @@ server <- function(input, output, session) {
   })
   
   #url="https://github.com/silbaroli/painel_patentes/blob/main/data/patentes_14Abr2023.db?raw=true"
-  url="https://github.com/silbaroli/painel_patentes/blob/main/patentes_25Abr2023.db?raw=true"
-  #download.file(url,"patentes_14Abr2023.db")
+  #url="https://github.com/silbaroli/painel/blob/main/data/patentes_02Mai2023.db"
+  #download.file(url,"patentes_02Mai2023.db")
   
-  con <- dbConnect(RSQLite::SQLite(),"patentes_25Abr2023.db")
+  con <- dbConnect(RSQLite::SQLite(),"data/patentes_02Mai2023.db")
   #con <- dbConnect(RSQLite::SQLite(),"data/patentes.db")
   
   sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct))
@@ -781,25 +780,33 @@ server <- function(input, output, session) {
         "Número absoluto" = "Número de patentes",
         "Proporção" = "Proporção"
       )
-          
-      p=ggplot(db1,aes(x=date,y=count,fill=cat))+
-        geom_bar_interactive(stat='identity',position=ifelse(input$select2=="Número absoluto","stack","fill"),aes(tooltip=paste0(cat,": ",ifelse(input$select2=="Número absoluto",count,per))))+
-        labs(x=xTitle,y=yTitle,fill="")+
-        theme_classic()+
-        theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
-              text=element_text(size = 16),
-              title = element_text(size = 16),
-              plot.caption = element_text(size=12),
-              strip.text = element_text(size=16))+
-        guides(fill=guide_legend(nrow=ifelse(input$nivel=="Nível 1",2,8),byrow=TRUE))+
-        scale_fill_manual("",values = colors)+
-        scale_y_continuous(labels = ifelse(input$select2=="Número absoluto",scales::number,scales::percent),expand=c(0,0.05))+
-        scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
+      
+      if(input$select2=="Número absoluto"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="stack",aes(tooltip=paste0(cat,": ",count)))
+      } else if(input$select2=="Proporção"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="fill",aes(tooltip=paste0(cat,": ",per)))
+      }    
+      #p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+      #  geom_bar_interactive(stat='identity',position=ifelse(input$select2=="Número absoluto","stack","fill"),aes(tooltip=paste0(cat,": ",ifelse(input$select2=="Número absoluto",count,per))))+
+        p=p+
+          labs(x=xTitle,y=yTitle,fill="")+
+          theme_classic()+
+          theme(legend.position = "bottom")+
+          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
+                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
+                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
+                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
+                legend.text=element_text(size = 12),
+                text=element_text(size = 16),
+                title = element_text(size = 16),
+                plot.caption = element_text(size=12),
+                strip.text = element_text(size=16))+
+          guides(fill=guide_legend(nrow=ifelse(input$nivel=="Nível 1",2,8),byrow=TRUE))+
+          scale_fill_manual("",values = colors)+
+          scale_y_continuous(labels = ifelse(input$select2=="Número absoluto",scales::number,scales::percent),expand=c(0,0.05))+
+          scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
       
     } else if(input$tp_plot2=="Linhas"){
       yTitle="Número de patentes"
@@ -879,8 +886,14 @@ server <- function(input, output, session) {
         "Proporção" = "Proporção"
       )
       
-      p=ggplot(db1,aes(x=date,y=count,fill=cat))+
-        geom_bar_interactive(stat='identity',position=ifelse(input$select3=="Número absoluto","stack","fill"),aes(tooltip=paste0(cat,": ",count)))+
+      if(input$select3=="Número absoluto"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="stack",aes(tooltip=paste0(cat,": ",count)))
+      } else if(input$select3=="Proporção"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="fill",aes(tooltip=paste0(cat,": ",per)))
+      }
+      p=p+
         labs(x=xTitle,y=yTitle,fill="")+
         theme_classic()+
         theme(legend.position = "bottom")+
