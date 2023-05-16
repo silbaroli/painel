@@ -11,7 +11,7 @@ source("uf.R")
 
 #setwd("/Users/silvanooliveira/Google Drive/Meu Drive/Consultoria/CEPAL/painel/")
 
-cat=read.csv("categorias_iea.csv")
+cat=read.csv("data/categorias_iea.csv")
 cat$nivel1=stringr::str_replace_all(cat$nivel1,"iea","")
 cat$nivel2=stringr::str_replace_all(cat$nivel2,"iea","")
 
