@@ -119,12 +119,9 @@ server <- function(input, output, session) {
     as.numeric(strsplit(input$select_button, "_")[[1]][2])
   })
   
-  unzip("data/patentes.db.zip",files='patentes.db')
-  #variant=data.table::fread('variant_surveillance.tsv',sep="\t",encoding = "UTF-8")
+  con <- dbConnect(RSQLite::SQLite(),"data/patentes_02Mai2023.db")
   
-  con <- dbConnect(RSQLite::SQLite(),"data/patentes.db")
-  
-  sqltb1 <- DBI::dbReadTable(con,"patente")
+  sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct))
   sqltb2 <- DBI::dbReadTable(con,"iea_patente")
   sqltb3 <- DBI::dbReadTable(con,"iea_categoria")
   sqltb4 <- DBI::dbReadTable(con,"status_patente")
@@ -137,16 +134,9 @@ server <- function(input, output, session) {
     sqltb3 <- sqltb3 %>% 
       filter(descricao %in% c(input$nivel2))
     
-    sqltb4 <- sqltb4 %>%
-      filter(case_when(input$tp_ano!="pedido" ~ status %in% c(input$tp_ano),
-                       TRUE ~ !status %in% c(input$tp_ano))) %>%
-      group_by(id_patente) %>%
-      summarise(ano_status = max(as.numeric(substr(data,1,4)),na.rm=T))
-
     sqltb5 <-full_join(
       sqltb5 %>% 
-        filter(categoria_pessoa == "Depositante") %>% 
-        mutate(tipo_pessoa = ifelse(is.na(tipo_pessoa),"N",tipo_pessoa)),
+        filter(categoria_pessoa == "Depositante"),
       sqltb1[,c("id_patente","peso")],by="id_patente") %>% 
       mutate(pais = case_when(is.na(pais) ~ "Não informado",
                               (pais %in% c("IP","OA","PB","YU")) ~ "Não informado",
@@ -174,25 +164,21 @@ server <- function(input, output, session) {
           sqltb2[!duplicated(sqltb2$id_patente),c("id_patente","codigo_categoria")],
           sqltb3,by=c("codigo_categoria"="codigo")),
         by="id_patente") %>% 
-      left_join(sqltb4[,c("id_patente","ano_status")],by="id_patente") %>% 
       inner_join(sqltb5[!duplicated(sqltb5$id_patente),c("id_patente","tipo_pessoa","pais")],by="id_patente") %>% 
       left_join(aux,by="id_patente") %>% 
-      #mutate(ano=ano_pedido) %>% 
-      mutate(ano=case_when(input$tp_ano=="pedido" ~ ano_pedido,
-                           TRUE ~ ano_status)) %>%
+      mutate(ano=ano_pedido) %>%
       mutate(status_atual = ifelse(is.na(status_atual),"Sem informação",status_atual)) %>% 
       mutate(feminino = case_when(brasil==1 & presenca_feminina_ibge=="F" ~ 1,
                                   brasil==1 & presenca_feminina_ibge=="N" ~ 0,
                                   brasil==1 & presenca_feminina_ibge=="I" ~ 2,
                                   TRUE ~ 9)) %>% 
-      mutate(tp_pessoa = case_when(tipo_pessoa == "PF" ~ 1,
-                                   tipo_pessoa == "N" ~ 0,
-                                   TRUE ~ 9)) %>% 
       mutate(cooper_nac = ifelse(is.na(cooper_nac) & brasil==1,9,cooper_nac)) %>% 
       mutate(cooper_inter = ifelse(is.na(cooper_inter) & brasil==1,9,cooper_inter)) %>% 
       mutate(count=1) %>% 
       filter(ano>=min(input$date) & ano<=max(input$date)) %>% 
       filter(status_atual %in% c(input$status)) %>% 
+      filter(excluir ==0) %>% 
+      filter(pct %in% c(input$pct)) %>% 
       collect()
   })
   
@@ -201,13 +187,7 @@ server <- function(input, output, session) {
     df2 <- sqltb2 %>% 
       inner_join(sqltb3 %>% rename("nivel2" = "descricao"),by=c("codigo_categoria"="codigo")) %>% 
       inner_join(sqltb6 %>% rename("nivel1" = "descricao"),by=c("codigo_grupo"="codigo")) %>% 
-      inner_join(sqltb1 %>% select(id_patente,status_atual,ano_pedido),by="id_patente") %>% 
-      inner_join(sqltb4 %>%
-                   filter(case_when(input$tp_ano!="pedido" ~ status %in% c(input$tp_ano),
-                                    TRUE ~ !status %in% c(input$tp_ano))) %>%
-                   group_by(id_patente) %>%
-                   summarise(ano_status = max(as.numeric(substr(data,1,4)),na.rm=T)),
-                 by="id_patente") %>% 
+      inner_join(sqltb1 %>% filter(pct %in% c(input$pct)) %>% select(id_patente,status_atual,ano_pedido,excluir),by="id_patente") %>% 
       inner_join(sqltb5 %>% 
                    filter(categoria_pessoa == "Depositante") %>% 
                    select(id_patente,pais,uf) %>% 
@@ -217,25 +197,18 @@ server <- function(input, output, session) {
                    filter(!duplicated(id_patente)),
                  by="id_patente") %>% 
       select(-codigo_categoria,-codigo_grupo) %>%
-      mutate(ano=case_when(input$tp_ano=="pedido" ~ ano_pedido,
-                           TRUE ~ ano_status)) %>%
+      mutate(ano=ano_pedido) %>%
       filter(nivel2 %in% c(input$nivel2)) %>% 
       filter(ano>=min(input$date) & ano<=max(input$date)) %>% 
       filter(status_atual %in% c(input$status)) %>% 
       filter(case_when(input$tp_origem=="Nacional" ~ str_detect(uf,paste(c(input$uf),collapse = "|")),
                        TRUE ~ str_detect(pais,paste(c(input$nacionalidade),collapse = "|")))) %>% 
+      filter(excluir ==0) %>%
       mutate(count=1) %>% 
       collect()
   })
   
   database3 <- reactive({
-    
-    sqltb4 <- sqltb4 %>%
-      filter(case_when(input$tp_ano!="pedido" ~ status %in% c(input$tp_ano),
-                       TRUE ~ !status %in% c(input$tp_ano))) %>%
-      group_by(id_patente) %>%
-      summarise(ano_status = max(as.numeric(substr(data,1,4)),na.rm=T))
-    
     
     df3<-sqltb1 %>% 
       inner_join(
@@ -258,67 +231,22 @@ server <- function(input, output, session) {
                     pais=paste(pais_iso,collapse = ", "),
                     uf=paste(uf,collapse = ", ")),
         by="id_patente") %>% 
-      left_join(sqltb4[,c("id_patente","ano_status")],by="id_patente") %>% 
-      mutate(ano=case_when(input$tp_ano=="pedido" ~ ano_pedido,
-                           TRUE ~ ano_status)) %>%
+      mutate(ano=ano_pedido) %>%
       filter(!is.na(ipc)) %>% 
       filter(ano>=min(input$date) & ano<=max(input$date)) %>% 
       filter(status_atual %in% c(input$status)) %>% 
       filter(case_when(input$tp_origem=="Nacional" ~ str_detect(uf,paste(c(input$uf),collapse = "|")),
                        TRUE ~ str_detect(pais,paste(c(input$nacionalidade),collapse = "|")))) %>% 
       filter(str_detect(nivel2,paste(c(input$nivel2),collapse = "|"))) %>% 
+      filter(excluir==0) %>% 
+      filter(pct %in% c(input$pct)) %>% 
       dplyr::select(numero_pedido,titulo,resumo,depositantes,status_atual,ano,pais,uf,ipc,nivel2) %>%
       collect()
-    
-    
-    
-    
-    
-    # df3<-read.csv("data/database2.csv")
-    # 
-    # df3 <- rename(df3,'Tecnologias de Eficiência Energética aplicadas à Industria'='iea11',
-    #              'Tecnologias de Eficiência Energética aplicada a residências e estabelecimentos comerciais'='iea12',
-    #              'Tecnologias de Eficiência Energética aplicadas ao setor de transporte rodoviário'='iea13',
-    #              'Outras Tecnologias de Eficiência Energética'='iea14',
-    #              'Energia solar'='iea31',
-    #              'Energia Eólica'='iea32',
-    #              'Energia dos Oceanos'='iea33',
-    #              'Biocombustíveis'='iea34',
-    #              'Energia Geotérmica'='iea35',
-    #              'Hidroeletricidade'='iea36',
-    #              'Fissão Nuclear'='iea41',
-    #              'Fusão Nuclear'='iea42',
-    #              'Outros fusão e fissão não alocados'='iea49',
-    #              'Células a Combustível'='iea52',
-    #              'Outras Tecnologias de Geração'='iea61',
-    #              'Armazenamento de Energia'='iea63')
-    # 
-    # if(length(input$nivel2)>1){
-    #   df3$count<-as.numeric(+(apply(df3[,c(input$nivel2)]==1,1,any)))
-    # } else{
-    #   df3$count<-ifelse(df3[,input$nivel2]==1,1,0)
-    # }
-    # 
-    # df3$ano<-switch(input$tp_ano,
-    #                "pedido" = df3$ano_pedido,
-    #                "concessão" = df3$ano_concessao,
-    #                "deferimento" = df3$ano_deferimento,
-    #                "indeferimento" = df3$ano_indeferimento
-    # )
-    # 
-    # df3<-df3[which(df3$ano>=min(input$date) & df3$ano<=max(input$date)),]
-    # df3<-df3 %>% filter(status1 %in% c(input$status))
-    # 
-    # if(input$tp_origem=="Nacional"){
-    #   df3<-df3 %>% filter(str_detect(uf,paste(c(input$uf),collapse = "|")))
-    # } else if(input$tp_origem=="Internacional"){
-    #   df3<-df3 %>% filter(str_detect(pais,paste(c(input$nacionalidade),collapse = "|")))
-    # }
     
   })
   
   output$title <- renderUI({
-
+    
     if(input$tab=="evolucao"){
       htmlText = paste("<div style='margin-left: 0.2px'!important;>","Evolução temporal dos pedidos de patentes","</div>")
     } else if(input$tab=="categoria"){
@@ -334,22 +262,14 @@ server <- function(input, output, session) {
     } else if(input$tab=="explorar"){
       htmlText = paste("<div style='margin-left: 0.2px'!important;>","Explorar os pedidos de patentes","</div>")
     }
-
+    
     HTML(htmlText)
   })
   
   output$title_plot1 <- renderUI({
     
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
-    
     if(input$tp_plot1!="Download"){
-      htmlText = paste0("Número de patentes depositadas por ano ", ano,", ", min(input$date)," a ",max(input$date))
+      htmlText = paste0("Número de patentes depositadas por ano do depósito, ", min(input$date)," a ",max(input$date))
     }
     
     HTML(htmlText)
@@ -357,17 +277,10 @@ server <- function(input, output, session) {
   
   output$title_plot2 <- renderUI({
     
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
     
     if(input$tp_plot2!="Download"){
       if(input$tp_plot2=="Barras" | input$tp_plot2=="Linhas" | input$tp_plot2=="Tabela"){
-        htmlText = paste0("Número de patentes depositadas segundo classificação tecnológica por ano ",ano,", ",min(input$date)," a ",max(input$date))
+        htmlText = paste0("Número de patentes depositadas segundo classificação tecnológica por ano do depósito, ",min(input$date)," a ",max(input$date))
         
       } else if(input$tp_plot2=="Setor"){
         htmlText = paste0("Distribuição proporcional das patentes depositadas segundo classificação tecnológica, ",
@@ -380,17 +293,10 @@ server <- function(input, output, session) {
   
   output$title_plot3 <- renderUI({
     
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
     
     if(input$tp_plot3!="Download"){
       if(input$tp_plot3=="Barras" | input$tp_plot3=="Linhas" | input$tp_plot3=="Tabela"){
-        htmlText = paste0("Número de patentes depositadas segundo status por ano",ano,", ",min(input$date)," a ",max(input$date))
+        htmlText = paste0("Número de patentes depositadas segundo status por ano do depósito, ",min(input$date)," a ",max(input$date))
       } else if(input$tp_plot3=="Setor"){
         htmlText = paste0("Distribuição proporcional das patentes depositadas segundo status, ",min(input$date)," a ",max(input$date))
       }
@@ -400,24 +306,14 @@ server <- function(input, output, session) {
   
   output$title_plot41 <- renderUI({
     
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
-    
     if(input$tp_plot41!="Download"){
       if(input$tp_plot41=="Barras" | input$tp_plot41=="Linhas"){
         htmlText = paste0(ifelse(input$select41=="Número absoluto","Número de patentes ","Distribuição proporcional das patentes "),
                           "de depositantes com nacionalidade ",
-                          ifelse(input$local=="Brasil","brasileira","de algum país das Américas")," por ano ",
-                          ano,", ",min(input$date)," a ",max(input$date))
+                          ifelse(input$local=="Brasil","brasileira","de algum país das Américas")," por ano do depósito, ",min(input$date)," a ",max(input$date))
       } else if(input$tp_plot41=="Tabela"){
         htmlText = paste0("Número de patentes de depositantes com nacionalidade ",
-                          ifelse(input$local=="Brasil","brasileira","de algum país das Américas")," por ano ",
-                          ano,", ",min(input$date)," a ",max(input$date))
+                          ifelse(input$local=="Brasil","brasileira","de algum país das Américas")," por ano do depósito, ",min(input$date)," a ",max(input$date))
       } else if(input$tp_plot41=="Setor"){
         htmlText = paste0("Distribuição proporcional das patentes de depositantes com nacionalidade ",
                           ifelse(input$local=="Brasil","brasileira","de algum país das Américas"),", ",min(input$date)," a ",max(input$date))
@@ -428,70 +324,8 @@ server <- function(input, output, session) {
     
   })
   
-  output$title_plot42 <- renderUI({
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
-    
-    if(input$tp_plot42!="Download"){
-      if(input$tp_plot42=="Barras"){
-        htmlText = paste0(ifelse(input$select42=="Número absoluto","Número de patentes depositadas por pessoa física por ano ",
-                                 "Distribuição proporcional das patentes depositadas por tipo de pessoa (física e não física) por ano "),
-                          ano,", ",min(input$date)," a ",max(input$date))
-      } else if(input$tp_plot42=="Linhas"){
-        htmlText = paste0("Número de patentes depositadas por pessoa física por ano ",
-                          ano,", ",min(input$date)," a ",max(input$date))
-      } else if(input$tp_plot42=="Tabela"){
-        htmlText = paste0("Número de patentes depositadas por tipo de pessoa (física e não física) por ano ",
-                          ano,", ",min(input$date)," a ",max(input$date))
-      } else if(input$tp_plot42=="Setor"){
-        htmlText = paste0("Distribuição proporcional das patentes depositadas por tipo de pessoa (física e não física), ",min(input$date)," a ",max(input$date))
-      }
-
-      HTML(htmlText)
-    }
-
-  })
-  
-  output$title_plot5 <- renderUI({
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
-    
-    if(input$tp_plot5!="Download"){
-      if(input$tp_plot5=="Barras"){
-        htmlText = paste0(ifelse(input$select5=="Proporção",
-                                 "Distribuição proporcional das patentes depositadas segundo presença feminina entre os inventores por ano ",
-                                 "Número de patentes depositadas com a presença de inventor do sexo feminino por ano "),
-                          ano,", ",min(input$date)," a ",max(input$date))
-      } else if(input$tp_plot5=="Tabela" | input$tp_plot5=="Linhas"){
-        htmlText = paste0("Número de patentes depositadas com a presença de inventor do sexo feminino por ano ",
-                          ano,", ",min(input$date)," a ",max(input$date))
-      } else if(input$tp_plot5=="Setor"){
-        htmlText = paste0("Distribuição proporcional das patentes depositadas segundo presença feminina entre os inventores, ",min(input$date)," a ",max(input$date))
-      }
-      
-      HTML(htmlText)
-    }
-    
-  })
-  
   output$title_plot6 <- renderUI({
-    ano<-switch (input$tp_ano,
-                 "pedido" = "do pedido",
-                 "Concedido" = "da concessão",
-                 "Deferido" = "do deferimento",
-                 "Indeferido" = "do indeferimento",
-                 "Publicado" = "da publicação",
-                 "Depositado" = "do depósito")
+    ano<-"do depósito"
     
     if(input$tp_plot6!="Download"){
       if(input$tp_plot6=="Barras"){
@@ -518,15 +352,7 @@ server <- function(input, output, session) {
       summarise(count=sum(count))
     
     
-    xTitle=switch (input$tp_ano,
-      "pedido" = "Ano do pedido",
-      "Concedido" = "Ano da concessão",
-      "Deferido" = "Ano do deferimento",
-      "Indeferido" = "Ano do indeferimento",
-      "Publicado" = "Ano da publicação",
-      "Depositado" = "Ano do depósito"
-    )
-    
+    xTitle="Ano do depósito"
     yTitle="Número de patentes"
     
     if(input$tp_plot1=="Barras"){
@@ -546,7 +372,7 @@ server <- function(input, output, session) {
         guides(fill=guide_legend(nrow=1,byrow=TRUE))+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
         scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-   
+      
     } else if(input$tp_plot1=="Linhas"){
       p=ggplot(db1,aes(x=date,y=count))+
         geom_line(color="#005266",size=1.1)+
@@ -565,7 +391,7 @@ server <- function(input, output, session) {
         guides(fill=guide_legend(nrow=1,byrow=TRUE))+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1$count)))+
         scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-
+      
     }
     
     girafe(ggobj = p,width_svg = 20,height_svg = 8)
@@ -576,31 +402,31 @@ server <- function(input, output, session) {
     db=database2()
     
     db$classif=switch(input$nivel,
-      "Nível 1" = db$nivel1,
-      "Nível 2" = db$nivel2
+                      "Nível 1" = db$nivel1,
+                      "Nível 2" = db$nivel2
     )
     
     colors=switch (input$nivel,
-      "Nível 1" = c("Eficiência Energética"="#E49B64","Fontes de Energia Renováveis"="#498399",
-                    "Fissão e Fusão Nuclear"="#8A3D39","Hidrogênio e Células a Combustível"="#B0A3C4",
-                    "Outras Tecnologias de Geração e Armazenamento de Energia"="#2B651F"),
-      
-      "Nível 2" = c("Tecnologias de Eficiência Energética aplicadas à Industria"="#2f1335",                             
-                    "Tecnologias de Eficiência Energética aplicada a residências e estabelecimentos comerciais"="#a6cee3",
-                    "Tecnologias de Eficiência Energética aplicadas ao setor de transportes"="#1f78b4",
-                    "Outras Tecnologias de Eficiência Energética"="#b2df8a",
-                    "Energia solar"="#33a02c",
-                    "Energia Eólica"="#fb9a99",
-                    "Energia dos Oceanos"="#e31a1c",
-                    "Biocombustíveis"="#5c1b35",
-                    "Energia Geotérmica"="#fdbf6f",
-                    "Hidroeletricidade"="#cab2d6",
-                    "Fissão Nuclear"="#6a3d9a",
-                    "Fusão Nuclear"="#c59538",
-                    "Outros fusão e fissão não alocados"="#ffff99",
-                    "Células a Combustível"="#b15928",
-                    "Geração de energia elétrica"="#fddf2f",
-                    "Armazenamento de Energia"="#71dbd2")
+                   "Nível 1" = c("Eficiência Energética"="#E49B64","Fontes de Energia Renováveis"="#498399",
+                                 "Fissão e Fusão Nuclear"="#8A3D39","Hidrogênio e Células a Combustível"="#B0A3C4",
+                                 "Outras Tecnologias de Geração e Armazenamento de Energia"="#2B651F"),
+                   
+                   "Nível 2" = c("Tecnologias de Eficiência Energética aplicadas à Industria"="#2f1335",                             
+                                 "Tecnologias de Eficiência Energética aplicada a residências e estabelecimentos comerciais"="#a6cee3",
+                                 "Tecnologias de Eficiência Energética aplicadas ao setor de transportes"="#1f78b4",
+                                 "Outras Tecnologias de Eficiência Energética"="#b2df8a",
+                                 "Energia solar"="#33a02c",
+                                 "Energia Eólica"="#fb9a99",
+                                 "Energia dos Oceanos"="#e31a1c",
+                                 "Biocombustíveis"="#5c1b35",
+                                 "Energia Geotérmica"="#fdbf6f",
+                                 "Hidroeletricidade"="#cab2d6",
+                                 "Fissão Nuclear"="#6a3d9a",
+                                 "Fusão Nuclear"="#c59538",
+                                 "Outros fusão e fissão não alocados"="#ffff99",
+                                 "Células a Combustível"="#b15928",
+                                 "Geração de energia elétrica"="#fddf2f",
+                                 "Armazenamento de Energia"="#71dbd2")
     )
     
     
@@ -614,24 +440,24 @@ server <- function(input, output, session) {
       db1[db1$date==i,]$per=round(db1[db1$date==i,]$count/sum(db1[db1$date==i,]$count)*100,1)
     }
     
-    xTitle=switch (input$tp_ano,
-                   "pedido" = "Ano do pedido",
-                   "Concedido" = "Ano da concessão",
-                   "Deferido" = "Ano do deferimento",
-                   "Indeferido" = "Ano do indeferimento",
-                   "Publicado" = "Ano da publicação",
-                   "Depositado" = "Ano do depósito"
-    )
-    
+    xTitle="Ano do depósito"
     
     if(input$tp_plot2=="Barras"){
       yTitle=switch (input$select2,
-        "Número absoluto" = "Número de patentes",
-        "Proporção" = "Proporção"
+                     "Número absoluto" = "Número de patentes",
+                     "Proporção" = "Proporção"
       )
-          
-      p=ggplot(db1,aes(x=date,y=count,fill=cat))+
-        geom_bar_interactive(stat='identity',position=ifelse(input$select2=="Número absoluto","stack","fill"),aes(tooltip=paste0(cat,": ",count)))+
+      
+      if(input$select2=="Número absoluto"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="stack",aes(tooltip=paste0(cat,": ",count)))
+      } else if(input$select2=="Proporção"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="fill",aes(tooltip=paste0(cat,": ",per)))
+      }    
+      #p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+      #  geom_bar_interactive(stat='identity',position=ifelse(input$select2=="Número absoluto","stack","fill"),aes(tooltip=paste0(cat,": ",ifelse(input$select2=="Número absoluto",count,per))))+
+      p=p+
         labs(x=xTitle,y=yTitle,fill="")+
         theme_classic()+
         theme(legend.position = "bottom")+
@@ -676,7 +502,7 @@ server <- function(input, output, session) {
       
       db1=db %>%
         group_by(cat=classif) %>%
-        summarise(count=sum(value))
+        summarise(count=sum(count))
       
       db1$per=db1$count/sum(db1$count)
       
@@ -715,27 +541,26 @@ server <- function(input, output, session) {
       mutate(total=sum(count)) %>% 
       mutate(per=round(count/total*100,1))
     
-    colors=c("Deferido"="#a6cee3","Concedido"="#1f78b4","Publicado"="#b2df8a","Fase Nacional - PCT"="#33a02c",
-             "Indeferido"="#fb9a99","Sem informação"="#999999")
+    colors=c("Vigente"="#a6cee3","Não vigente"="#1f78b4","Pendente"="#b2df8a",
+             "Extinta"="#fb9a99","Não válida"="#999999")
     
-    xTitle=switch (input$tp_ano,
-                   "pedido" = "Ano do pedido",
-                   "Concedido" = "Ano da concessão",
-                   "Deferido" = "Ano do deferimento",
-                   "Indeferido" = "Ano do indeferimento",
-                   "Publicado" = "Ano da publicação",
-                   "Depositado" = "Ano do depósito"
-    )
+    xTitle="Ano do depósito"
     
     if(input$tp_plot3=="Barras"){
       
       yTitle=switch (input$select3,
-        "Número absoluto" = "Número de patentes",
-        "Proporção" = "Proporção"
+                     "Número absoluto" = "Número de patentes",
+                     "Proporção" = "Proporção"
       )
       
-      p=ggplot(db1,aes(x=date,y=count,fill=cat))+
-        geom_bar_interactive(stat='identity',position=ifelse(input$select3=="Número absoluto","stack","fill"),aes(tooltip=paste0(cat,": ",count)))+
+      if(input$select3=="Número absoluto"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="stack",aes(tooltip=paste0(cat,": ",count)))
+      } else if(input$select3=="Proporção"){
+        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
+          geom_bar_interactive(stat='identity',position="fill",aes(tooltip=paste0(cat,": ",per)))
+      }
+      p=p+
         labs(x=xTitle,y=yTitle,fill="")+
         theme_classic()+
         theme(legend.position = "bottom")+
@@ -824,14 +649,7 @@ server <- function(input, output, session) {
       mutate(total = sum(count)) %>% 
       mutate(per = round(count/total*100,1))
     
-    xTitle=switch (input$tp_ano,
-                   "pedido" = "Ano do pedido",
-                   "Concedido" = "Ano da concessão",
-                   "Deferido" = "Ano do deferimento",
-                   "Indeferido" = "Ano do indeferimento",
-                   "Publicado" = "Ano da publicação",
-                   "Depositado" = "Ano do depósito"
-    )
+    xTitle="Ano do depósito"
     
     if(input$tp_plot41=="Barras"){
       if(input$select41=="Número absoluto"){
@@ -941,269 +759,7 @@ server <- function(input, output, session) {
       
     }
     
-    girafe(ggobj = p,width_svg = 14,height_svg = 8)
-  })
-  
-  output$plot42 <- renderGirafe({
-    
-    db1=database() %>% 
-      group_by(date=ano,cat=tp_pessoa) %>% 
-      summarise(count=sum(count)) %>% 
-      group_by(date) %>% 
-      mutate(total = sum(count)) %>% 
-      mutate(per = round(count/total*100,1))
-    
-    db1$per=NA
-    for(i in unique(db1$date)){
-      db1[db1$date==i,]$per=round(db1[db1$date==i,]$count/sum(db1[db1$date==i,]$count)*100,1)
-    }
-    
-    xTitle=switch (input$tp_ano,
-                   "pedido" = "Ano do pedido",
-                   "Concedido" = "Ano da concessão",
-                   "Deferido" = "Ano do deferimento",
-                   "Indeferido" = "Ano do indeferimento",
-                   "Publicado" = "Ano da publicação",
-                   "Depositado" = "Ano do depósito"
-    )
-    
-    if(input$tp_plot42=="Barras"){
-      if(input$select42=="Número absoluto"){
-        yTitle="Número de patentes"
-        
-        p=ggplot(db1[which(db1$cat==1),],aes(x=date,y=count))+
-          geom_bar_interactive(stat='identity',fill="#005266",aes(tooltip=count))+
-          labs(x=xTitle,y=yTitle,fill="")+
-          theme_classic()+
-          theme(legend.position = "none")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
-                text=element_text(size = 16),
-                title = element_text(size = 16),
-                plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
-          guides(fill=guide_legend(nrow=1,byrow=TRUE))+
-          scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
-          scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-        
-        
-        
-      } else if(input$select42=="Proporção"){
-        yTitle="Proporção"
-        
-        db1$cat=factor(db1$cat,levels=c(1,0,9),labels=c("Pessoa física","Não pessoa física","Sem informação de país"))
-        
-        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
-          geom_bar_interactive(stat='identity',position=position_fill(reverse = F),aes(tooltip=paste0(cat,": ",per,"%")))+
-          labs(x=xTitle,y=yTitle,fill="")+
-          theme_classic()+
-          theme(legend.position = "bottom")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
-                text=element_text(size = 16),
-                title = element_text(size = 16),
-                plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
-          guides(fill=guide_legend(nrow=1,byrow=TRUE))+
-          scale_fill_manual("",values=c("#005266","#7197A4","grey70"))+
-          scale_y_continuous(labels = scales::percent,expand=c(0,0.05))+
-          scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-      }
-      
-      
-    } else if(input$tp_plot42=="Linhas"){
-      yTitle="Número de patentes"
-      
-      p=ggplot(db1[which(db1$cat==1),],aes(x=date,y=count))+
-        geom_line(color="#005266",size=1.1)+
-        geom_point_interactive(aes(tooltip=count),color="#005266")+
-        labs(x=xTitle,y=yTitle,color=NULL)+
-        theme_classic()+
-        theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
-              text=element_text(size = 16),
-              title = element_text(size = 16),
-              plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
-        guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        scale_color_manual("",values = colors)+
-        scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1[which(db1$cat==1),]$count)))+
-        scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-      
-    } else if(input$tp_plot42=="Setor"){
-      
-      db2=database() %>% 
-        group_by(cat=tp_pessoa) %>% 
-        summarise(count=sum(count))
-      
-      db2$per=db2$count/sum(db2$count)
-      
-      db2$ymax=cumsum(db2$per)
-      db2$ymin=c(0,head(db2$ymax,n=-1))
-      
-      db2$cat=factor(db2$cat,levels=c(1,0,9),labels=c("Pessoa física","Não pessoa física","Sem informação de país"))
-      
-      p=ggplot(db2, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=cat))+
-        geom_rect_interactive(aes(tooltip=paste0(cat,": ",round(per*100,1),"%")))+
-        scale_color_manual("",values = c("#005266","#7197A4","grey70"))+
-        scale_fill_manual("",values = c("#005266","#7197A4","grey70"))+
-        coord_polar(theta="y")+
-        labs(fill="",color="")+
-        xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 18),
-              text=element_text(size = 16),
-              title = element_text(size = 16),
-              plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
-        guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
-      
-    }
-    
-    girafe(ggobj = p,width_svg = 14,height_svg = 8)
-  })
-  
-  output$plot5 <- renderGirafe({
-    
-    db1=database() %>% 
-      group_by(date=ano,cat=feminino) %>% 
-      summarise(count=sum(count)) %>% 
-      mutate(total = sum(count)) %>% 
-      mutate(per = round(count/total*100,1))
-    
-    xTitle=switch (input$tp_ano,
-                   "pedido" = "Ano do pedido",
-                   "Concedido" = "Ano da concessão",
-                   "Deferido" = "Ano do deferimento",
-                   "Indeferido" = "Ano do indeferimento",
-                   "Publicado" = "Ano da publicação",
-                   "Depositado" = "Ano do depósito"
-    )
-    
-    if(input$tp_plot5=="Barras"){
-      if(input$select5=="Número absoluto"){
-        yTitle="Número de patentes"
-        
-        p=ggplot(db1[which(db1$cat==1),],aes(x=date,y=count))+
-          geom_bar_interactive(stat='identity',fill="#005266",aes(tooltip=count))+
-          labs(x=xTitle,y=yTitle,fill="")+
-          theme_classic()+
-          theme(legend.position = "none")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
-                text=element_text(size = 16),
-                title = element_text(size = 16),
-                plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
-          guides(fill=guide_legend(nrow=1,byrow=TRUE))+
-          scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
-          scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-        
-        
-        
-      } else if(input$select5=="Proporção"){
-        yTitle="Proporção"
-        
-        db1$cat=factor(db1$cat,levels=c(0,1,2,9),labels=c("Ausência feminina","Presença feminina","Indefinido","Sem informação"))
-        
-        p=ggplot(db1,aes(x=date,y=count,fill=cat))+
-          geom_bar_interactive(stat='identity',position=position_fill(reverse = T),aes(tooltip=paste0(cat,": ",per,"%")))+
-          labs(x=xTitle,y=yTitle,fill="")+
-          theme_classic()+
-          theme(legend.position = "bottom")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
-                text=element_text(size = 16),
-                title = element_text(size = 16),
-                plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
-          guides(fill=guide_legend(nrow=1,byrow=TRUE))+
-          scale_fill_manual("",values=c("#005266","#7197A4","grey30","grey70"))+
-          scale_y_continuous(labels = scales::percent,expand=c(0,0.05))+
-          scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-      }
-      
-      
-    } else if(input$tp_plot5=="Linhas"){
-      yTitle="Número de patentes"
-      
-      p=ggplot(db1[which(db1$cat==1),],aes(x=date,y=count))+
-        geom_line(color="#005266",size=1.1)+
-        geom_point_interactive(aes(tooltip=count),color="#005266")+
-        labs(x=xTitle,y=yTitle,color=NULL)+
-        theme_classic()+
-        theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
-              text=element_text(size = 16),
-              title = element_text(size = 16),
-              plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
-        guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        scale_color_manual("",values = colors)+
-        scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1[which(db1$cat==1),]$count)))+
-        scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
-      
-    } else if(input$tp_plot5=="Setor"){
-      
-      db2=database() %>% 
-        group_by(cat=feminino) %>% 
-        summarise(count=sum(count))
-      
-      db2$per=db2$count/sum(db2$count)
-      
-      db2$ymax=cumsum(db2$per)
-      db2$ymin=c(0,head(db2$ymax,n=-1))
-      
-      db2$cat=factor(db2$cat,levels=c(0,1,2,9),labels=c("Ausência feminina","Presença feminina","Indefinido","Sem informação"))
-      
-      p=ggplot(db2, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=cat))+
-        geom_rect_interactive(aes(tooltip=paste0(cat,": ",round(per*100,1),"%")))+
-        scale_color_manual("",values = c("#005266","#7197A4","grey30","grey70"))+
-        scale_fill_manual("",values = c("#005266","#7197A4","grey30","grey70"))+
-        coord_polar(theta="y")+
-        labs(fill="",color="")+
-        xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 20),
-              text=element_text(size = 16),
-              title = element_text(size = 16),
-              plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
-        guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
-      
-    }
-    
-    girafe(ggobj = p,width_svg = 14,height_svg = 8)
+    girafe(ggobj = p,width_svg = 20,height_svg = 8)
   })
   
   output$plot6 <- renderGirafe({
@@ -1221,14 +777,7 @@ server <- function(input, output, session) {
       mutate(total = sum(count)) %>% 
       mutate(per = round(count/total*100,1))
     
-    xTitle=switch (input$tp_ano,
-                   "pedido" = "Ano do pedido",
-                   "Concedido" = "Ano da concessão",
-                   "Deferido" = "Ano do deferimento",
-                   "Indeferido" = "Ano do indeferimento",
-                   "Publicado" = "Ano da publicação",
-                   "Depositado" = "Ano do depósito"
-    )
+    xTitle="Ano do depósito"
     
     if(input$tp_plot6=="Barras"){
       if(input$select6=="Número absoluto"){
@@ -1339,7 +888,7 @@ server <- function(input, output, session) {
       
     }
     
-    girafe(ggobj = p,width_svg = 14,height_svg = 8)
+    girafe(ggobj = p,width_svg = 20,height_svg = 8)
   })
   
   output$tab1 <- DT::renderDataTable({
@@ -1629,154 +1178,12 @@ server <- function(input, output, session) {
     print(my.table)
   })
   
-  output$tab42 <- DT::renderDataTable({
-    
-    tab=database() %>% 
-      group_by(date=ano,cat=tp_pessoa) %>% 
-      summarise(count=sum(count))
-    
-    tab$cat=factor(tab$cat,levels=c(1,0,9),labels=c("Pessoa física","Não pessoa física","Sem informação"))
-    
-    tab=reshape2::dcast(tab,date~cat,value.var = "count")
-    
-    my.options <- list(autoWidth = FALSE,
-                       searching = FALSE,
-                       ordering = TRUE,
-                       lengthChange = FALSE,
-                       lengthMenu = FALSE,
-                       pageLength = FALSE,
-                       paging = FALSE,
-                       info = FALSE,
-                       buttons = c('copy', 'csv', 'excel', 'pdf'),
-                       rowsGroup = list(0))
-    
-    header.style <- "th { font-family: 'Calibri'; font-size:16px ;font-weight: bold; color: white; background-color: #005266;}"
-    
-    header.names <- c(paste0("Ano",ifelse(input$tp_ano=="Concessão"," da "," do "),input$tp_ano),
-                      names(tab)[-1])
-    
-    my.container <- withTags(table(
-      style(type = "text/css", header.style),
-      thead(
-        tr(
-          lapply(header.names, th, style = "text-align: center; border-right-width: 1px; border-right-style: solid; border-right-color: white; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: white")
-        )
-      )
-    ))
-    
-    
-    
-    my.table <- datatable(tab, options = my.options, container = my.container, rownames = F, width = '100%', extensions = 'Buttons') %>%
-      formatStyle(columns = c(2:ncol(tab)),
-                  width = '100px',
-                  fontFamily = "Calibri",
-                  fontSize = "14px",
-                  borderRightWidth = "1px",
-                  borderRightStyle = "solid",
-                  borderRightColor = "white",
-                  borderBottomColor = "#ffffff",
-                  borderBottomStyle = "solid",
-                  borderBottomWidth = "1px",
-                  borderCollapse = "collapse",
-                  verticalAlign = "middle",
-                  textAlign = "center",
-                  wordWrap = "break-word") %>%
-      formatStyle(columns = c(1),
-                  width = '100px',
-                  fontFamily = "Calibri",
-                  fontSize = "14px",
-                  borderRightWidth = "1px",
-                  borderRightStyle = "solid",
-                  borderRightColor = "white",
-                  borderBottomColor = "#ffffff",
-                  borderBottomStyle = "solid",
-                  borderBottomWidth = "1px",
-                  borderCollapse = "collapse",
-                  verticalAlign = "middle",
-                  textAlign = "left",
-                  wordWrap = "break-word")
-    
-    
-    print(my.table)
-  })
-  
-  output$tab5 <- DT::renderDataTable({
-    
-    tab=database() %>% 
-      group_by(date=ano,cat=presenca_feminina_ibge) %>% 
-      summarise(count=sum(count))
-    
-    tab$cat=factor(tab$cat,levels=c(1,0,9),labels=c("Presença Feminina","Ausência Feminina","Sem informação"))
-    
-    tab=reshape2::dcast(tab,date~cat,value.var = "count")
-    
-    my.options <- list(autoWidth = FALSE,
-                       searching = FALSE,
-                       ordering = TRUE,
-                       lengthChange = FALSE,
-                       lengthMenu = FALSE,
-                       pageLength = FALSE,
-                       paging = FALSE,
-                       info = FALSE,
-                       buttons = c('copy', 'csv', 'excel', 'pdf'),
-                       rowsGroup = list(0))
-    
-    header.style <- "th { font-family: 'Calibri'; font-size:16px ;font-weight: bold; color: white; background-color: #005266;}"
-    
-    header.names <- c(paste0("Ano",ifelse(input$tp_ano=="Concessão"," da "," do "),input$tp_ano),
-                      names(tab)[-1])
-    
-    my.container <- withTags(table(
-      style(type = "text/css", header.style),
-      thead(
-        tr(
-          lapply(header.names, th, style = "text-align: center; border-right-width: 1px; border-right-style: solid; border-right-color: white; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: white")
-        )
-      )
-    ))
-    
-    
-    
-    my.table <- datatable(tab, options = my.options, container = my.container, rownames = F, width = '100%', extensions = 'Buttons') %>%
-      formatStyle(columns = c(2:ncol(tab)),
-                  width = '100px',
-                  fontFamily = "Calibri",
-                  fontSize = "14px",
-                  borderRightWidth = "1px",
-                  borderRightStyle = "solid",
-                  borderRightColor = "white",
-                  borderBottomColor = "#ffffff",
-                  borderBottomStyle = "solid",
-                  borderBottomWidth = "1px",
-                  borderCollapse = "collapse",
-                  verticalAlign = "middle",
-                  textAlign = "center",
-                  wordWrap = "break-word") %>%
-      formatStyle(columns = c(1),
-                  width = '100px',
-                  fontFamily = "Calibri",
-                  fontSize = "14px",
-                  borderRightWidth = "1px",
-                  borderRightStyle = "solid",
-                  borderRightColor = "white",
-                  borderBottomColor = "#ffffff",
-                  borderBottomStyle = "solid",
-                  borderBottomWidth = "1px",
-                  borderCollapse = "collapse",
-                  verticalAlign = "middle",
-                  textAlign = "left",
-                  wordWrap = "break-word")
-    
-    
-    print(my.table)
-  })
-  
   output$tab6 <- DT::renderDataTable({
     
     db=database()
     db$coopera=switch(input$coopera,
-      "nacional" = db$cooper_nac,
-      "internacional" = db$cooper_inter
+                      "nacional" = db$cooper_nac,
+                      "internacional" = db$cooper_inter
     )
     
     tab=db %>% 
@@ -2011,49 +1418,6 @@ server <- function(input, output, session) {
       )
       
       switch (input$format4.1,
-              ".csv" = write.csv2(df, file,row.names = FALSE),
-              ".xlsx" = write.xlsx(df,file)
-      )
-    }
-  )
-  
-  output$data4.2 <- downloadHandler(
-    
-    filename = function() {
-      paste0("data",input$format4.2)
-    },
-    
-    content = function(file) {
-      
-      df=database() %>% 
-        group_by(Ano=ano,Categoria=tp_pessoa) %>% 
-        summarise(n=sum(count))
-      
-      df$Categoria=ifelse(df$Categoria==1,"Pessoa física",ifelse(df$Categoria==0,"Não pessoa física","Sem informação"))
-      
-      switch (input$format4.2,
-              ".csv" = write.csv2(df, file,row.names = FALSE),
-              ".xlsx" = write.xlsx(df,file)
-      )
-    }
-  )
-  
-  output$data5 <- downloadHandler(
-    
-    filename = function() {
-      paste0("data",input$format5)
-    },
-    
-    content = function(file) {
-      
-      df=database() %>% 
-        group_by(Ano=ano,`Presença Feminina`=presenca_feminina_ibge) %>% 
-        summarise(n=sum(count))
-      
-      df$`Presença Feminina`=ifelse(df$`Presença Feminina`==1,"Sim",
-                                    ifelse(df$`Presença Feminina`==0,"Não","Sem informação"))
-      
-      switch (input$format5,
               ".csv" = write.csv2(df, file,row.names = FALSE),
               ".xlsx" = write.xlsx(df,file)
       )

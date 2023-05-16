@@ -21,19 +21,21 @@ page <- dashboardBody(
       h1(htmlOutput("title")),
       hr(),
       box(width = 12, collapsed = F, collapsible = TRUE,title = "Filtros", solidHeader = TRUE, status = "primary",
-        column(width = 4,
+        column(width = 3,
           h4(pickerInput("nivel1","Tecnologia energética nível 1",choices = unique(cat$label1),
                               options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} categorias selecionadas"),multiple = T,selected = unique(cat$label1)))
         ),
-        column(width = 4,
+        column(width = 3,
           h4(pickerInput("nivel2","Tecnologia energética nível 2",choices = unique(cat$label2),
                               options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} categorias selecionadas"),multiple = T,selected = unique(cat$label2)))  
         ),
-        column(width = 4,
-          h4(pickerInput("status","Situação",choices = c("Concedido","Deferido","Depositado","Fase Nacional - PCT",
-                                                         "Indeferido","Publicado","Sem informação"),
-                              options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} status selecionados"),multiple = T,selected = c("Concedido","Deferido","Depositado","Fase Nacional - PCT",
-                                                                                                                                                                                                                                                                         "Indeferido","Publicado")))
+        column(width = 3,
+          h4(pickerInput("status","Situação",choices = c("Vigente","Não vigente","Pendente","Extinta","Não válida"),
+                              options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} status selecionados"),multiple = T,selected = c("Vigente","Não vigente","Pendente","Extinta","Não válida")))
+        ),
+        column(width = 3,
+          h4(pickerInput("pct","Origem do pedido",choices = c("Nacional"=0,"Internacional (PCT)"=1),
+                              options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count > 3"),multiple = T,selected = c(1,0)))
         ),
         column(width = 3,
           h4(pickerInput("tp_origem","Agrupamento",choices = c("UF (Brasil)"="Nacional","Países"="Internacional"),multiple = F,selected = "Internacional"))
@@ -52,12 +54,7 @@ page <- dashboardBody(
                                                 `selected-text-format` = "count",`count-selected-text` = "{0}/{1} UF's selecionadas"),multiple = T,selected = uf))
            )   
         ),
-        column(width = 3,
-          h4(pickerInput("tp_ano","Ano",choices = c("Pedido"="pedido","Concessão"="Concedido","Deferimento"="Deferido","Indeferimento"="Indeferido",
-                                                    "Publicação"="Publicado","Depósito"="Depositado"),
-                              options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count > 3"),multiple = F,selected = "pedido"))
-        ),
-        column(width = 3,
+        column(width = 6,
           setSliderColor("Teal", 1),
           h4(sliderInput("date","Período",min=2000,max=year(Sys.Date()),value = c(2010,2020),sep=""))
         )
@@ -68,8 +65,6 @@ page <- dashboardBody(
       categoria,
       status,
       origem,
-      tp_pessoa,
-      inventor,
       cooperacao,
       explorar
     )
