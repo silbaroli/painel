@@ -258,6 +258,7 @@ countries=c("Afeganistão"="AF","África do Sul"="ZA","Albânia"="AL","Alemanha"
             "Turquia"="TR","Tuvalu"="TV","Ucrânia"="UA","Uganda"="UG","Uruguai"="UY","Usbequistão"="UZ","Vanuatu"="VU",
             "Venezuela"="VE","Vietname"="VN","Wallis e Futuna"="WF","Zâmbia"="ZM","Zimbábue"="ZW","Não informado")
 
+countries=sort(countries[which(countries %in% unique(DBI::dbReadTable(dbConnect(RSQLite::SQLite(),"data/patentes_17Mai2023.db"),"pessoa")$pais_iso))])
 
 uf=c("Rondônia"="RO","Acre"="AC","Amazonas"="AM","Pará"="PA","Roraima"="RR",
      "Amapá"="AP","Tocantins"="TO","Maranhão"="MA","Piauí"="PI","Ceará"="CE",
@@ -286,7 +287,7 @@ page <- dashboardBody(
                                 options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} categorias selecionadas"),multiple = T,selected = unique(cat$label2)))  
           ),
           column(width = 3,
-                 h4(pickerInput("status","Situação",choices = c("Vigente","Não vigente","Pendente","Extinta","Não válida"),
+                 h4(pickerInput("status","Situação",choices = c("Vigente","Não vigente","Pendente","Extinta"),
                                 options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} status selecionados"),multiple = T,selected = c("Vigente")))
           ),
           column(width = 3,
@@ -428,7 +429,7 @@ server <- function(input, output, session) {
   #url="https://github.com/silbaroli/painel/blob/main/data/patentes_02Mai2023.db"
   #download.file(url,"patentes_02Mai2023.db")
   
-  con <- dbConnect(RSQLite::SQLite(),"data/patentes_02Mai2023.db")
+  con <- dbConnect(RSQLite::SQLite(),"data/patentes_17Mai2023.db")
   #con <- dbConnect(RSQLite::SQLite(),"data/patentes.db")
   
   sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct))
