@@ -447,7 +447,7 @@ server <- function(input, output, session) {
     sqltb5 <-full_join(
       sqltb5 %>% 
         filter(categoria_pessoa == "Depositante"),
-      sqltb1[,c("id_patente","peso")],by="id_patente") %>% 
+      sqltb1[,c("id_patente","tipo")],by="id_patente") %>% 
       mutate(pais = case_when(is.na(pais) ~ "Não informado",
                               (pais %in% c("IP","OA","PB","YU")) ~ "Não informado",
                               pais=="DD" ~ "DE", 
