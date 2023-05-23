@@ -11,6 +11,8 @@ source("uf.R")
 
 #setwd("/Users/silvanooliveira/Google Drive/Meu Drive/Consultoria/CEPAL/painel/")
 
+countries=sort(countries[which(countries %in% unique(DBI::dbReadTable(dbConnect(RSQLite::SQLite(),"data/patentes_17Mai2023.db"),"pessoa")$pais_iso))])
+
 cat=read.csv("data/categorias_iea.csv")
 cat$nivel1=stringr::str_replace_all(cat$nivel1,"iea","")
 cat$nivel2=stringr::str_replace_all(cat$nivel2,"iea","")
@@ -30,7 +32,7 @@ page <- dashboardBody(
                               options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} categorias selecionadas"),multiple = T,selected = unique(cat$label2)))  
         ),
         column(width = 3,
-          h4(pickerInput("status","Situação",choices = c("Vigente","Não vigente","Pendente","Extinta","Não válida"),
+          h4(pickerInput("status","Situação",choices = c("Vigente","Não vigente","Pendente","Extinta"),
                               options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count",`count-selected-text` = "{0}/{1} status selecionados"),multiple = T,selected = c("Vigente","Não vigente","Pendente","Extinta","Não válida")))
         ),
         column(width = 3,
