@@ -294,10 +294,10 @@ page <- dashboardBody(
                  h4(pickerInput("pct","Origem do pedido",choices = c("Nacional"=0,"Internacional (PCT)"=1),
                                 options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",`select-all-text` = "Marcar todas",size = 10,`selected-text-format` = "count > 3"),multiple = T,selected = c(1,0)))
           ),
-          column(width = 3,
+          column(width = 2,
                  h4(pickerInput("tp_origem","Agrupamento",choices = c("UF (Brasil)"="Nacional","Países"="Internacional"),multiple = F,selected = "Internacional"))
           ),
-          column(width = 3,
+          column(width = 2,
                  conditionalPanel(condition = "input.tp_origem=='Internacional'",
                                   h4(pickerInput("nacionalidade","País",choices = countries,
                                                  options = list(`actions-box` = TRUE,`deselect-all-text` = "Desmarcar todas",
@@ -310,6 +310,9 @@ page <- dashboardBody(
                                                                 `select-all-text` = "Marcar todas",size = 10,
                                                                 `selected-text-format` = "count",`count-selected-text` = "{0}/{1} UF's selecionadas"),multiple = T,selected = uf))
                  )   
+          ),
+          column(width = 2,
+            h4(pickerInput("tipo","Tipo",choices = c("Modelo de utilidade","Patente de invenção"),multiple = T,selected = c("Modelo de utilidade","Patente de invenção")))
           ),
           column(width = 6,
                  setSliderColor("Teal", 1),
@@ -435,7 +438,8 @@ server <- function(input, output, session) {
   sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct))
   sqltb2 <- DBI::dbReadTable(con,"iea_patente")
   sqltb3 <- DBI::dbReadTable(con,"iea_categoria")
-  sqltb5 <- DBI::dbReadTable(con,"pessoa")
+  sqltb5 <- DBI::dbReadTable(con,"pessoa") %>% 
+    mutate(america=ifelse(str_detect(pais_iso,paste(c("AR","BO","BR","CL","CO","EC","PE","PY","UY","VE"),collapse = "|")),1,0))
   sqltb6 <- DBI::dbReadTable(con,"iea_grupo")
   sqltb7 <- DBI::dbReadTable(con,"ipc_patente")
   
@@ -489,6 +493,7 @@ server <- function(input, output, session) {
       filter(status_atual %in% c(input$status)) %>% 
       filter(excluir ==0) %>% 
       filter(pct %in% c(input$pct)) %>% 
+      filter(tipo %in% c(input$tipo)) %>% 
       collect()
   })
   
@@ -497,7 +502,7 @@ server <- function(input, output, session) {
     df2 <- sqltb2 %>% 
       inner_join(sqltb3 %>% rename("nivel2" = "descricao"),by=c("codigo_categoria"="codigo")) %>% 
       inner_join(sqltb6 %>% rename("nivel1" = "descricao"),by=c("codigo_grupo"="codigo")) %>% 
-      inner_join(sqltb1 %>% filter(pct %in% c(input$pct)) %>% select(id_patente,status_atual,ano_pedido,excluir),by="id_patente") %>% 
+      inner_join(sqltb1 %>% filter(pct %in% c(input$pct)) %>% select(id_patente,status_atual,ano_pedido,excluir,tipo),by="id_patente") %>% 
       inner_join(sqltb5 %>% 
                    filter(categoria_pessoa == "Depositante") %>% 
                    select(id_patente,pais,uf) %>% 
@@ -514,6 +519,7 @@ server <- function(input, output, session) {
       filter(case_when(input$tp_origem=="Nacional" ~ str_detect(uf,paste(c(input$uf),collapse = "|")),
                        TRUE ~ str_detect(pais,paste(c(input$nacionalidade),collapse = "|")))) %>% 
       filter(excluir ==0) %>%
+      filter(tipo %in% c(input$tipo)) %>% 
       mutate(count=1) %>% 
       collect()
   })
@@ -550,6 +556,7 @@ server <- function(input, output, session) {
       filter(str_detect(nivel2,paste(c(input$nivel2),collapse = "|"))) %>% 
       filter(excluir==0) %>% 
       filter(pct %in% c(input$pct)) %>% 
+      filter(tipo %in% c(input$tipo)) %>% 
       dplyr::select(numero_pedido,titulo,resumo,depositantes,status_atual,ano,pais,uf,ipc,nivel2) %>%
       collect()
     
