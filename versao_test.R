@@ -432,10 +432,10 @@ server <- function(input, output, session) {
   #url="https://github.com/silbaroli/painel/blob/main/data/patentes_02Mai2023.db"
   #download.file(url,"patentes_02Mai2023.db")
   
-  con <- dbConnect(RSQLite::SQLite(),"data/patentes_17Mai2023.db")
+  con <- dbConnect(RSQLite::SQLite(),"data/patentes_25Mai2023.db")
   #con <- dbConnect(RSQLite::SQLite(),"data/patentes.db")
   
-  sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct))
+  sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct)) %>% dplyr::select(-uf)
   sqltb2 <- DBI::dbReadTable(con,"iea_patente")
   sqltb3 <- DBI::dbReadTable(con,"iea_categoria")
   sqltb5 <- DBI::dbReadTable(con,"pessoa") %>% 
