@@ -21,6 +21,7 @@ options(spinner.color = "#7197A4", spinner.color.background = "#ffffff", spinner
 
 
 sidebar <- dashboardSidebar(
+  width = 300,
   useShinyjs(),
   sidebarMenu(id="tab",
               menuItem("Evolução das patentes", tabName = "evolucao", icon = icon("chart-line")),
@@ -39,6 +40,7 @@ header <- dashboardHeader(disable = TRUE)
 evolucao<-tabItem(tabName = "evolucao",
                   fluidRow(
                     box(width = 12,
+                        
                         column(width = 12,align="right",
                                radioGroupButtons(
                                  inputId = "tp_plot1",
@@ -46,7 +48,8 @@ evolucao<-tabItem(tabName = "evolucao",
                                  choiceNames = list(icon("chart-column"),icon("chart-line"),icon("table"),icon("download")),
                                  choiceValues = c("Barras", "Linhas", "Tabela","Download"),
                                  status = "primary"
-                               )
+                               ),
+                               tags$script("$(\"input:radio[name='tp_plot1']\").parent().css('background-color', '#215264');")
                         ),
                         hr(),
                         fluidRow(
@@ -84,7 +87,8 @@ categoria<-tabItem(tabName = "categoria",
                                   choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
                                   choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
                                   status = "primary"
-                                )
+                                ),
+                                tags$script("$(\"input:radio[name='tp_plot2']\").parent().css('background-color', '#215264');")
                          ),
                          hr(),hr(),
                          fluidRow(
@@ -118,7 +122,8 @@ status<-tabItem(tabName = "status",
                                choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
                                choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
                                status = "primary"
-                             )
+                             ),
+                             tags$script("$(\"input:radio[name='tp_plot3']\").parent().css('background-color', '#215264');")
                       ),
                       hr(),hr(),
                       fluidRow(
@@ -154,7 +159,8 @@ origem<-tabItem(tabName = "origem",
                                choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
                                choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
                                status = "primary"
-                             )
+                             ),
+                             tags$script("$(\"input:radio[name='tp_plot41']\").parent().css('background-color', '#215264');")
                       ),
                       hr(),hr(),
                       fluidRow(
@@ -191,7 +197,8 @@ cooperacao<-tabItem(tabName = "cooperacao",
                                    choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
                                    choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
                                    status = "primary"
-                                 )
+                                 ),
+                                 tags$script("$(\"input:radio[name='tp_plot6']\").parent().css('background-color', '#215264');")
                           ),
                           hr(),hr(),
                           fluidRow(
@@ -258,7 +265,7 @@ countries=c("Afeganistão"="AF","África do Sul"="ZA","Albânia"="AL","Alemanha"
             "Turquia"="TR","Tuvalu"="TV","Ucrânia"="UA","Uganda"="UG","Uruguai"="UY","Usbequistão"="UZ","Vanuatu"="VU",
             "Venezuela"="VE","Vietname"="VN","Wallis e Futuna"="WF","Zâmbia"="ZM","Zimbábue"="ZW","Não informado")
 
-countries=sort(countries[which(countries %in% unique(DBI::dbReadTable(dbConnect(RSQLite::SQLite(),"data/patentes_17Mai2023.db"),"pessoa")$pais_iso))])
+countries=countries[which(countries %in% unique(DBI::dbReadTable(dbConnect(RSQLite::SQLite(),"data/patentes_25Mai2023.db"),"pessoa")$pais_iso))]
 
 uf=c("Rondônia"="RO","Acre"="AC","Amazonas"="AM","Pará"="PA","Roraima"="RR",
      "Amapá"="AP","Tocantins"="TO","Maranhão"="MA","Piauí"="PI","Ceará"="CE",
@@ -269,10 +276,64 @@ uf=c("Rondônia"="RO","Acre"="AC","Amazonas"="AM","Pará"="PA","Roraima"="RR",
      "Goiás"="GO","Distrito Federal"="DF","Não informado")
 
 cat=read.csv("https://raw.githubusercontent.com/silbaroli/painel/main/data/categorias_iea.csv")
+#cat=read.csv("data/categorias_iea.csv")
 cat$nivel1=stringr::str_replace_all(cat$nivel1,"iea","")
 cat$nivel2=stringr::str_replace_all(cat$nivel2,"iea","")
 
 page <- dashboardBody(
+  
+  tags$head(tags$style(HTML('
+                                /* logo */
+                                .skin-blue .main-header .logo {
+                                background-color: #ffffff;
+                                }
+                                
+                                /* main sidebar */
+                                .skin-blue .main-sidebar {
+                                background-color: #ffffff;
+                                }
+                                
+                                /* active selected tab in the sidebarmenu */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                                background-color: #215264; font-family: "Calibri", sans-serif;
+                                color: #ffffff;font-size:20px;font-weight: bold;
+                                }
+                                
+                                /* other links in the sidebarmenu */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                                background-color: #ffffff;
+                                color: #000000;font-family: "Calibri", sans-serif;
+                                font-size:18px;
+                                }
+                                
+                                /* other links in the sidebarmenu when hovered */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+                                background-color: #e5e5e5;
+                                }
+                                
+                                /* toggle button when hovered  */
+                                .skin-blue .main-header .navbar .sidebar-toggle:hover{
+                                background-color: #e5e5e5;
+                                }
+                                
+                                /* toggle button when hovered selected */
+                                .skin-blue .main-header .navbar .sidebar-toggle.selected{
+                                background-color: #215264;
+                                }
+                            
+                                /* body */
+                                .content-wrapper, .right-side {
+                                background-color: #ffffff;
+                                }
+                                
+                                /* box filter */
+                                .box.box-solid.box-primary>.box-header {
+                                background-color: #215264;
+                                font-family: "Calibri", sans-serif;font-size:18px;
+                                }
+                                
+                                '))),
+  
   fluidPage(
     fluidRow(
       h1(htmlOutput("title")),
@@ -353,73 +414,89 @@ server <- function(input, output, session) {
   observeEvent(input$tp_plot1,{
     req(input$tp_plot1=="Download")
     
-    showModal(modalDialog(
-      selectInput("format1","Formato:",c(".csv",".xlsx")),
+    showModal(tags$div(id="modal1", modalDialog(
+      tags$head(tags$style("#modal1 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
+      htmlOutput("alerta_modal1"),
+      hr(),
+      selectInput("format1","Formato:",c(".xlsx",".csv")),
       downloadButton("data1", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
+      tags$span(style = "color:blue"),
+      
+      # fluidRow(
+      #   box(width = 12,
+      #     title=HTML(paste0("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Download de arquivo","</div>")),
+      #     solidHeader = TRUE, status = "warning",
+      #     fluidRow(
+      #       htmlOutput("alerta_modal1")
+      #     ),
+      #     
+      #   )
+      # ),
+      easyClose = TRUE,footer = NULL)
     ))}
   )
   
   observeEvent(input$tp_plot2,{
-    req(input$tp_plot2=="Download")
+    req(input$tp_plot1=="Download")
     
-    showModal(modalDialog(
-      selectInput("format2","Formato:",c(".csv",".xlsx")),
+    showModal(tags$div(id="modal2", modalDialog(
+      tags$head(tags$style("#modal2 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
+      htmlOutput("alerta_modal2"),
+      hr(),
+      selectInput("format2","Formato:",c(".xlsx",".csv")),
       downloadButton("data2", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
     ))}
   )
   
   observeEvent(input$tp_plot3,{
-    req(input$tp_plot3=="Download")
+    req(input$tp_plot1=="Download")
     
-    showModal(modalDialog(
-      selectInput("format3","Formato:",c(".csv",".xlsx")),
+    showModal(tags$div(id="modal3", modalDialog(
+      tags$head(tags$style("#modal3 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
+      htmlOutput("alerta_modal3"),
+      hr(),
+      selectInput("format3","Formato:",c(".xlsx",".csv")),
       downloadButton("data3", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
     ))}
   )
   
   observeEvent(input$tp_plot41,{
-    req(input$tp_plot41=="Download")
-
-    showModal(modalDialog(
-      selectInput("format4.1","Formato:",c(".csv",".xlsx")),
-      downloadButton("data4.1", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
-    ))}
-  )
-  
-  observeEvent(input$tp_plot42,{
-    req(input$tp_plot42=="Download")
-
-    showModal(modalDialog(
-      selectInput("format4.2","Formato:",c(".csv",".xlsx")),
-      downloadButton("data4.2", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
-    ))}
-  )
-  
-  observeEvent(input$tp_plot5,{
-    req(input$tp_plot5=="Download")
+    req(input$tp_plot1=="Download")
     
-    showModal(modalDialog(
-      selectInput("format5","Formato:",c(".csv",".xlsx")),
-      downloadButton("data5", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
+    showModal(tags$div(id="modal4.1", modalDialog(
+      tags$head(tags$style("#modal4.1 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
+      htmlOutput("alerta_modal4.1"),
+      hr(),
+      selectInput("format4.1","Formato:",c(".xlsx",".csv")),
+      downloadButton("data4.1", label = "Download", class = NULL,icon = icon("download")),
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
     ))}
   )
   
   observeEvent(input$tp_plot6,{
-    req(input$tp_plot6=="Download")
+    req(input$tp_plot1=="Download")
     
-    showModal(modalDialog(
-      selectInput("format6","Formato:",c(".csv",".xlsx")),
+    showModal(tags$div(id="modal6", modalDialog(
+      tags$head(tags$style("#modal6 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
+      htmlOutput("alerta_modal6"),
+      hr(),
+      selectInput("format6","Formato:",c(".xlsx",".csv")),
       downloadButton("data6", label = "Download", class = NULL,icon = icon("download")),
-      easyClose = TRUE,footer = NULL
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
     ))}
   )
-  
+
   observeEvent(input$select_button, {
     toggleModal(session, "detalhes", "open")
   })
@@ -432,7 +509,7 @@ server <- function(input, output, session) {
   #url="https://github.com/silbaroli/painel/blob/main/data/patentes_02Mai2023.db"
   #download.file(url,"patentes_02Mai2023.db")
   
-  con <- dbConnect(RSQLite::SQLite(),"data/patentes_25Mai2023.db")
+  con <- dbConnect(RSQLite::SQLite(),"patentes_25Mai2023.db")
   #con <- dbConnect(RSQLite::SQLite(),"data/patentes.db")
   
   sqltb1 <- DBI::dbReadTable(con,"patente") %>% mutate(pct=ifelse(is.na(pct),0,pct)) %>% dplyr::select(-uf)
@@ -565,21 +642,156 @@ server <- function(input, output, session) {
   output$title <- renderUI({
 
     if(input$tab=="evolucao"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Evolução temporal dos pedidos de patentes","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Evolução temporal dos pedidos de patentes","</div>")
     } else if(input$tab=="categoria"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Pedidos de patentes por classificação tecnológica","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Pedidos de patentes por classificação tecnológica","</div>")
     } else if(input$tab=="status"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Situação dos pedidos de patentes","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Situação dos pedidos de patentes","</div>")
     } else if(input$tab=="origem" | input$tab=="tp_pessoa"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Perfil do depositante","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Perfil do depositante","</div>")
     } else if(input$tab=="inventor"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Perfil do inventor","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Perfil do inventor","</div>")
     } else if(input$tab=="cooperacao"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Cooperação entre os pedidos de patentes","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Cooperação entre os pedidos de patentes","</div>")
     } else if(input$tab=="explorar"){
-      htmlText = paste("<div style='margin-left: 0.2px'!important;>","Explorar os pedidos de patentes","</div>")
+      htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Explorar os pedidos de patentes","</div>")
     }
 
+    HTML(htmlText)
+  })
+  
+  output$alerta_modal1 <- renderUI({
+    
+    fmt1="<div style='font-family: Calibri, sans-serif;font-size: 16px';'margin-left: 0.2px'!important;>"
+    fmt2="</div>"
+    
+    htmlText = paste(
+      fmt1,
+      "<p>Estes dados representam a quantidade de patentes depositadas por ano e compreende o período de",
+      min(database()$ano,na.rm=T),"a",max(database()$ano,na.rm=T),
+      "e considera os seguintes filtros:</p></div>",
+      "<br><b>Tecnologias energéticas:</b>",ifelse(length(input$nivel2)==17,"Todas categorias",paste(unique(input$nivel2),collapse = ', ')),
+      "<br><b>Situação das patentes:</b>",ifelse(length(input$status)==4,"Todos os status",paste(unique(input$status),collapse = ', ')),
+      #"<br><b>Origem do pedido:</b>",paste(unique(input$pct),collapse = ','),
+      "<br><b>",ifelse(input$tp_origem=="Internacional","País(es):","UF(s):"),"</b>",ifelse(input$tp_origem=="Nacional" & length(input$uf)==28,"Todas as UFs",
+                                                                                            ifelse(input$tp_origem=="Nacional" & length(input$uf)<28,paste(unique(input$uf),collapse = ","),
+                                                                                                   ifelse(input$tp_origem=="Internacional" & length(input$nacionalidade)==110,"Todos os países",
+                                                                                                          paste(unique(input$nacionalidade),collapse = ", ")))),
+      "<br><b>Tipo:</b>",paste(unique(input$tipo),collapse = ', '),
+      "</br>",
+      "<p></p>",
+      "<b>Observação: </b>Estes números representam a contagem do número de patentes, ou seja, 
+      não há dupla contagem quando uma patente se encontra em mais de uma categoria tecnológica ou mais de um país/UF.",
+      fmt2)
+    
+    HTML(htmlText)
+  })
+  
+  output$alerta_modal2 <- renderUI({
+    
+    fmt1="<div style='font-family: Calibri, sans-serif;font-size: 16px';'margin-left: 0.2px'!important;>"
+    fmt2="</div>"
+    
+    htmlText = paste(
+      fmt1,
+      "<p>Estes dados representam a quantidade de patentes depositadas por categoria tecnoógica e ano e compreende o período de",
+      min(database()$ano,na.rm=T),"a",max(database()$ano,na.rm=T),
+      "e considera os seguintes filtros:</p></div>",
+      "<br><b>Tecnologias energéticas:</b>",ifelse(length(input$nivel2)==17,"Todas categorias",paste(unique(input$nivel2),collapse = ', ')),
+      "<br><b>Situação das patentes:</b>",ifelse(length(input$status)==4,"Todos os status",paste(unique(input$status),collapse = ', ')),
+      #"<br><b>Origem do pedido:</b>",paste(unique(input$pct),collapse = ','),
+      "<br><b>",ifelse(input$tp_origem=="Internacional","País(es):","UF(s):"),"</b>",ifelse(input$tp_origem=="Nacional" & length(input$uf)==28,"Todas as UFs",
+                                                                                            ifelse(input$tp_origem=="Nacional" & length(input$uf)<28,paste(unique(input$uf),collapse = ","),
+                                                                                                   ifelse(input$tp_origem=="Internacional" & length(input$nacionalidade)==110,"Todos os países",
+                                                                                                          paste(unique(input$nacionalidade),collapse = ", ")))),
+      "<br><b>Tipo:</b>",paste(unique(input$tipo),collapse = ', '),
+      "</br>",
+      "<p></p>",
+      "<b>Observação: </b>Estes números representam a contagem do número de patentes para cada categoria tecnológica, ou seja, 
+      a soma das categorias tecnológicas é maior que o número total de patentes.",
+      fmt2)
+    
+    HTML(htmlText)
+  })
+  
+  output$alerta_modal3 <- renderUI({
+    
+    fmt1="<div style='font-family: Calibri, sans-serif;font-size: 16px';'margin-left: 0.2px'!important;>"
+    fmt2="</div>"
+    
+    htmlText = paste(
+      fmt1,
+      "<p>Estes dados representam a quantidade de patentes depositadas por status e ano e compreende o período de",
+      min(database()$ano,na.rm=T),"a",max(database()$ano,na.rm=T),
+      "e considera os seguintes filtros:</p></div>",
+      "<br><b>Tecnologias energéticas:</b>",ifelse(length(input$nivel2)==17,"Todas categorias",paste(unique(input$nivel2),collapse = ', ')),
+      "<br><b>Situação das patentes:</b>",ifelse(length(input$status)==4,"Todos os status",paste(unique(input$status),collapse = ', ')),
+      #"<br><b>Origem do pedido:</b>",paste(unique(input$pct),collapse = ','),
+      "<br><b>",ifelse(input$tp_origem=="Internacional","País(es):","UF(s):"),"</b>",ifelse(input$tp_origem=="Nacional" & length(input$uf)==28,"Todas as UFs",
+                                                                                            ifelse(input$tp_origem=="Nacional" & length(input$uf)<28,paste(unique(input$uf),collapse = ","),
+                                                                                                   ifelse(input$tp_origem=="Internacional" & length(input$nacionalidade)==110,"Todos os países",
+                                                                                                          paste(unique(input$nacionalidade),collapse = ", ")))),
+      "<br><b>Tipo:</b>",paste(unique(input$tipo),collapse = ', '),
+      "</br>",
+      "<p></p>",
+      "<b>Observação: </b>Estes números representam a contagem do número de patentes, ou seja, 
+      não há dupla contagem quando uma patente se encontra em mais de uma categoria tecnológica ou mais de um país/UF.",
+      fmt2)
+    
+    HTML(htmlText)
+  })
+  
+  output$alerta_modal4.1 <- renderUI({
+    
+    fmt1="<div style='font-family: Calibri, sans-serif;font-size: 16px';'margin-left: 0.2px'!important;>"
+    fmt2="</div>"
+    
+    htmlText = paste(
+      fmt1,
+      "<p>Estes dados representam a quantidade de patentes depositadas segundo perfil do depositante e ano e compreende o período de",
+      min(database()$ano,na.rm=T),"a",max(database()$ano,na.rm=T),
+      "e considera os seguintes filtros:</p></div>",
+      "<br><b>Tecnologias energéticas:</b>",ifelse(length(input$nivel2)==17,"Todas categorias",paste(unique(input$nivel2),collapse = ', ')),
+      "<br><b>Situação das patentes:</b>",ifelse(length(input$status)==4,"Todos os status",paste(unique(input$status),collapse = ', ')),
+      #"<br><b>Origem do pedido:</b>",paste(unique(input$pct),collapse = ','),
+      "<br><b>",ifelse(input$tp_origem=="Internacional","País(es):","UF(s):"),"</b>",ifelse(input$tp_origem=="Nacional" & length(input$uf)==28,"Todas as UFs",
+                                                                                            ifelse(input$tp_origem=="Nacional" & length(input$uf)<28,paste(unique(input$uf),collapse = ","),
+                                                                                                   ifelse(input$tp_origem=="Internacional" & length(input$nacionalidade)==110,"Todos os países",
+                                                                                                          paste(unique(input$nacionalidade),collapse = ", ")))),
+      "<br><b>Tipo:</b>",paste(unique(input$tipo),collapse = ', '),
+      "</br>",
+      "<p></p>",
+      "<b>Observação: </b>Estes números representam a contagem do número de patentes, ou seja, 
+      não há dupla contagem quando uma patente se encontra em mais de uma categoria tecnológica ou mais de um país/UF.",
+      fmt2)
+    
+    HTML(htmlText)
+  })
+  
+  output$alerta_modal6 <- renderUI({
+    
+    fmt1="<div style='font-family: Calibri, sans-serif;font-size: 16px';'margin-left: 0.2px'!important;>"
+    fmt2="</div>"
+    
+    htmlText = paste(
+      fmt1,
+      "<p>Estes dados representam a quantidade de patentes depositadas segundo cooperação e ano e compreende o período de",
+      min(database()$ano,na.rm=T),"a",max(database()$ano,na.rm=T),
+      "e considera os seguintes filtros:</p></div>",
+      "<br><b>Tecnologias energéticas:</b>",ifelse(length(input$nivel2)==17,"Todas categorias",paste(unique(input$nivel2),collapse = ', ')),
+      "<br><b>Situação das patentes:</b>",ifelse(length(input$status)==4,"Todos os status",paste(unique(input$status),collapse = ', ')),
+      #"<br><b>Origem do pedido:</b>",paste(unique(input$pct),collapse = ','),
+      "<br><b>",ifelse(input$tp_origem=="Internacional","País(es):","UF(s):"),"</b>",ifelse(input$tp_origem=="Nacional" & length(input$uf)==28,"Todas as UFs",
+                                                                                            ifelse(input$tp_origem=="Nacional" & length(input$uf)<28,paste(unique(input$uf),collapse = ","),
+                                                                                                   ifelse(input$tp_origem=="Internacional" & length(input$nacionalidade)==110,"Todos os países",
+                                                                                                          paste(unique(input$nacionalidade),collapse = ", ")))),
+      "<br><b>Tipo:</b>",paste(unique(input$tipo),collapse = ', '),
+      "</br>",
+      "<p></p>",
+      "<b>Observação: </b>Estes números representam a contagem do número de patentes, ou seja, 
+      não há dupla contagem quando uma patente se encontra em mais de uma categoria tecnológica ou mais de um país/UF.",
+      fmt2)
+    
     HTML(htmlText)
   })
   
@@ -1878,9 +2090,21 @@ server <- function(input, output, session) {
         group_by(ano) %>%
         summarise(n=sum(count))
       
+      # wb <- createWorkbook()
+      # addWorksheet(wb, "Tabela")
+      # 
+      # hs1 <- createStyle(fgFill = "#215264", halign = "CENTER", textDecoration = "Bold",
+      #                    border = "Bottom", fontColour = "white")
+      # 
+      # writeData(wb, 1, x = paste(str_glue("Tabela. Número de patentes por ano. {min(df$ano)} a {max(df$ano)}")), startRow = 1, startCol = 1)
+      # writeData(wb, 1, x=df, startRow = 2, startCol = 1, headerStyle = hs1)
+      # writeDataTable(wb, 1, x=df, startRow = 2, startCol = 1, tableStyle = "TableStyleMedium21",withFilter = F)
+      # writeData(wb, 1, x = "Nota: Este dado refere-se a contagem do número de patentes ano a ano.", startRow = (nrow(df)+3), startCol = 1)
+      
       switch (input$format1,
         ".csv" = write.csv2(df, file,row.names = FALSE),
         ".xlsx" = write.xlsx(df,file)
+        #".xlsx" = openxlsx::saveWorkbook(wb, file,overwrite = T)
       )
       
     }
