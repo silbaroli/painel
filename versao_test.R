@@ -27,10 +27,11 @@ sidebar <- dashboardSidebar(
               menuItem("Evolução das patentes", tabName = "evolucao", icon = icon("chart-line")),
               menuItem("Classificação tecnológica", tabName = "categoria", icon = icon("bars")),
               menuItem("Situação das patentes", tabName = "status", icon = icon("check")),
-              menuItem("Perfil do depositante", tabName = "origem", icon = icon("flask")),
+              #menuItem("Perfil do depositante", tabName = "origem", icon = icon("flask")),
               #menuItem("Perfil do inventor", tabName = "inventor", icon = icon("user-gear")),
               menuItem("Cooperação", tabName = "cooperacao", icon = icon("globe")),
               menuItem("Explorar patentes", tabName = "explorar", icon = icon("magnifying-glass"))
+              #menuItem("Nota metodológica",tabName = "nota",icon = icon("book"))
   )
 )
 
@@ -40,20 +41,24 @@ header <- dashboardHeader(disable = TRUE)
 evolucao<-tabItem(tabName = "evolucao",
                   fluidRow(
                     box(width = 12,
-                        
-                        column(width = 12,align="right",
+                        column(width = 3,offset=9,align="right",
                                radioGroupButtons(
                                  inputId = "tp_plot1",
                                  label = NULL,
-                                 choiceNames = list(icon("chart-column"),icon("chart-line"),icon("table"),icon("download")),
-                                 choiceValues = c("Barras", "Linhas", "Tabela","Download"),
+                                 choiceNames = list(icon("chart-column"),icon("chart-line"),icon("table"),icon("download"),icon("triangle-exclamation")),
+                                 choiceValues = c("Barras", "Linhas", "Tabela","Download","Alerta"),
                                  status = "primary"
                                ),
-                               tags$script("$(\"input:radio[name='tp_plot1']\").parent().css('background-color', '#215264');")
+                               tags$script("$(\"input:radio[name='tp_plot1'][value='Barras']\").parent().css('background-color', '#215264');"),
+                               tags$script("$(\"input:radio[name='tp_plot1'][value='Linhas']\").parent().css('background-color', '#215264');"),
+                               tags$script("$(\"input:radio[name='tp_plot1'][value='Tabela']\").parent().css('background-color', '#215264');"),
+                               tags$script("$(\"input:radio[name='tp_plot1'][value='Download']\").parent().css('background-color', '#215264');"),
+                               tags$script("$(\"input:radio[name='tp_plot1'][value='Alerta']\").parent().css('background-color', '#F4BB47');")
+                               
                         ),
-                        hr(),
+                        tags$hr(),
                         fluidRow(
-                          conditionalPanel(condition = "input.tp_plot1!='Download'",
+                          conditionalPanel(condition = "input.tp_plot1!='Download' & input.tp_plot1!='Alerta'",
                                            h3(htmlOutput("title_plot1", align = "center"))
                           ),
                           conditionalPanel(condition = "input.tp_plot1=='Barras' | input.tp_plot1=='Linhas'",
@@ -84,15 +89,21 @@ categoria<-tabItem(tabName = "categoria",
                                 radioGroupButtons(
                                   inputId = "tp_plot2",
                                   label = NULL,
-                                  choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
-                                  choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
+                                  choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download"),icon("triangle-exclamation")),
+                                  choiceValues = c("Barras", "Linhas","Setor","Tabela","Download","Alerta"),
                                   status = "primary"
                                 ),
-                                tags$script("$(\"input:radio[name='tp_plot2']\").parent().css('background-color', '#215264');")
+                                tags$script("$(\"input:radio[name='tp_plot2'][value='Barras']\").parent().css('background-color', '#215264');"),
+                                tags$script("$(\"input:radio[name='tp_plot2'][value='Linhas']\").parent().css('background-color', '#215264');"),
+                                tags$script("$(\"input:radio[name='tp_plot2'][value='Tabela']\").parent().css('background-color', '#215264');"),
+                                tags$script("$(\"input:radio[name='tp_plot2'][value='Setor']\").parent().css('background-color', '#215264');"),
+                                tags$script("$(\"input:radio[name='tp_plot2'][value='Download']\").parent().css('background-color', '#215264');"),
+                                tags$script("$(\"input:radio[name='tp_plot2'][value='Alerta']\").parent().css('background-color', '#F4BB47');")
                          ),
-                         hr(),hr(),
+                         tags$hr(),
+                         tags$hr(),
                          fluidRow(
-                           conditionalPanel(condition = "input.tp_plot2!='Download'",
+                           conditionalPanel(condition = "input.tp_plot2!='Download' & input.tp_plot2!='Alerta'",
                                             h3(htmlOutput("title_plot2", align = "center"))
                            ),
                            conditionalPanel(condition = "input.tp_plot2=='Barras' | input.tp_plot2=='Linhas' | input.tp_plot2=='Setor'",
@@ -119,15 +130,21 @@ status<-tabItem(tabName = "status",
                              radioGroupButtons(
                                inputId = "tp_plot3",
                                label = NULL,
-                               choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
-                               choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
+                               choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download"),icon("triangle-exclamation")),
+                               choiceValues = c("Barras", "Linhas","Setor","Tabela","Download","Alerta"),
                                status = "primary"
                              ),
-                             tags$script("$(\"input:radio[name='tp_plot3']\").parent().css('background-color', '#215264');")
+                             tags$script("$(\"input:radio[name='tp_plot3'][value='Barras']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot3'][value='Linhas']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot3'][value='Tabela']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot3'][value='Setor']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot3'][value='Download']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot3'][value='Alerta']\").parent().css('background-color', '#F4BB47');")
                       ),
-                      hr(),hr(),
+                      tags$hr(),
+                      tags$hr(),
                       fluidRow(
-                        conditionalPanel(condition = "input.tp_plot3!='Download'",
+                        conditionalPanel(condition = "input.tp_plot3!='Download' & input.tp_plot3!='Alerta'",
                                          h3(htmlOutput("title_plot3", align = "center"))
                         ),
                         conditionalPanel(condition = "input.tp_plot3=='Barras' | input.tp_plot3=='Linhas' | input.tp_plot3=='Setor'",
@@ -156,15 +173,21 @@ origem<-tabItem(tabName = "origem",
                              radioGroupButtons(
                                inputId = "tp_plot41",
                                label = NULL,
-                               choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
-                               choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
+                               choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download"),icon("triangle-exclamation")),
+                               choiceValues = c("Barras", "Linhas","Setor","Tabela","Download","Alerta"),
                                status = "primary"
                              ),
-                             tags$script("$(\"input:radio[name='tp_plot41']\").parent().css('background-color', '#215264');")
+                             tags$script("$(\"input:radio[name='tp_plot41'][value='Barras']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot41'][value='Linhas']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot41'][value='Tabela']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot41'][value='Setor']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot41'][value='Download']\").parent().css('background-color', '#215264');"),
+                             tags$script("$(\"input:radio[name='tp_plot41'][value='Alerta']\").parent().css('background-color', '#F4BB47');")
                       ),
-                      hr(),hr(),
+                      tags$hr(),
+                      tags$hr(),
                       fluidRow(
-                        conditionalPanel(condition = "input.tp_plot41!='Download'",
+                        conditionalPanel(condition = "input.tp_plot41!='Download' & input.tp_plot41!='Alerta'",
                                          h3(htmlOutput("title_plot41", align = "center"))
                         ),
                         conditionalPanel(condition = "input.tp_plot41!='Tabela' & input.tp_plot41!='Download'",
@@ -194,18 +217,24 @@ cooperacao<-tabItem(tabName = "cooperacao",
                                  radioGroupButtons(
                                    inputId = "tp_plot6",
                                    label = NULL,
-                                   choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download")),
-                                   choiceValues = c("Barras", "Linhas","Setor","Tabela","Download"),
+                                   choiceNames = list(icon("chart-column"),icon("chart-line"),icon("chart-pie"),icon("table"),icon("download"),icon("triangle-exclamation")),
+                                   choiceValues = c("Barras", "Linhas","Setor","Tabela","Download","Alerta"),
                                    status = "primary"
                                  ),
-                                 tags$script("$(\"input:radio[name='tp_plot6']\").parent().css('background-color', '#215264');")
+                                 tags$script("$(\"input:radio[name='tp_plot6'][value='Barras']\").parent().css('background-color', '#215264');"),
+                                 tags$script("$(\"input:radio[name='tp_plot6'][value='Linhas']\").parent().css('background-color', '#215264');"),
+                                 tags$script("$(\"input:radio[name='tp_plot6'][value='Tabela']\").parent().css('background-color', '#215264');"),
+                                 tags$script("$(\"input:radio[name='tp_plot6'][value='Setor']\").parent().css('background-color', '#215264');"),
+                                 tags$script("$(\"input:radio[name='tp_plot6'][value='Download']\").parent().css('background-color', '#215264');"),
+                                 tags$script("$(\"input:radio[name='tp_plot6'][value='Alerta']\").parent().css('background-color', '#F4BB47');")
                           ),
-                          hr(),hr(),
+                          tags$hr(),
+                          tags$hr(),
                           fluidRow(
-                            conditionalPanel(condition = "input.tp_plot6!='Download'",
+                            conditionalPanel(condition = "input.tp_plot6!='Download' & input.tp_plot6!='Alerta'",
                                              h3(htmlOutput("title_plot6", align = "center"))
                             ),
-                            conditionalPanel(condition = "input.tp_plot6!='Tabela' & input.tp_plot6!='Download'",
+                            conditionalPanel(condition = "input.tp_plot6!='Tabela' & input.tp_plot6!='Download' & input.tp_plot6!='Alerta'",
                                              withSpinner(ggiraphOutput("plot6", width = 'auto', height = 600), type = 2)
                             ),
                             conditionalPanel(condition = "input.tp_plot6=='Tabela'",
@@ -265,7 +294,7 @@ countries=c("Afeganistão"="AF","África do Sul"="ZA","Albânia"="AL","Alemanha"
             "Turquia"="TR","Tuvalu"="TV","Ucrânia"="UA","Uganda"="UG","Uruguai"="UY","Usbequistão"="UZ","Vanuatu"="VU",
             "Venezuela"="VE","Vietname"="VN","Wallis e Futuna"="WF","Zâmbia"="ZM","Zimbábue"="ZW","Não informado")
 
-countries=countries[which(countries %in% unique(DBI::dbReadTable(dbConnect(RSQLite::SQLite(),"data/patentes_25Mai2023.db"),"pessoa")$pais_iso))]
+countries=countries[which(countries %in% unique(DBI::dbReadTable(dbConnect(RSQLite::SQLite(),"patentes_25Mai2023.db"),"pessoa")$pais_iso))]
 
 uf=c("Rondônia"="RO","Acre"="AC","Amazonas"="AM","Pará"="PA","Roraima"="RR",
      "Amapá"="AP","Tocantins"="TO","Maranhão"="MA","Piauí"="PI","Ceará"="CE",
@@ -290,25 +319,25 @@ page <- dashboardBody(
                                 
                                 /* main sidebar */
                                 .skin-blue .main-sidebar {
-                                background-color: #ffffff;
+                                background-color: #ffffff;margin-left: 10px;
                                 }
                                 
                                 /* active selected tab in the sidebarmenu */
                                 .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
                                 background-color: #215264; font-family: "Calibri", sans-serif;
-                                color: #ffffff;font-size:20px;font-weight: bold;
+                                color: #ffffff;font-size:20px;font-weight: bold;border-radius: 4px;margin-left: 10px;
                                 }
                                 
                                 /* other links in the sidebarmenu */
                                 .skin-blue .main-sidebar .sidebar .sidebar-menu a{
                                 background-color: #ffffff;
                                 color: #000000;font-family: "Calibri", sans-serif;
-                                font-size:18px;
+                                font-size:18px;border-radius: 4px;margin-left: 10px;
                                 }
                                 
                                 /* other links in the sidebarmenu when hovered */
                                 .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                                background-color: #e5e5e5;
+                                background-color: #e5e5e5;border-radius: 4px;margin-left: 10px;
                                 }
                                 
                                 /* toggle button when hovered  */
@@ -332,12 +361,12 @@ page <- dashboardBody(
                                 font-family: "Calibri", sans-serif;font-size:18px;
                                 }
                                 
-                                '))),
-  
+                                '))
+  ),
   fluidPage(
     fluidRow(
       h1(htmlOutput("title")),
-      hr(),
+      br(),
       box(width = 12, collapsed = F, collapsible = TRUE,title = "Filtros", solidHeader = TRUE, status = "primary",
           column(width = 3,
                  h4(pickerInput("nivel1","Tecnologia energética nível 1",choices = unique(cat$label1),
@@ -418,33 +447,37 @@ server <- function(input, output, session) {
       tags$head(tags$style("#modal1 .modal-header {background-color: #215264; text-align: center}")),
       title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
       htmlOutput("alerta_modal1"),
-      hr(),
+      br(),
       selectInput("format1","Formato:",c(".xlsx",".csv")),
       downloadButton("data1", label = "Download", class = NULL,icon = icon("download")),
       tags$span(style = "color:blue"),
-      
-      # fluidRow(
-      #   box(width = 12,
-      #     title=HTML(paste0("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Download de arquivo","</div>")),
-      #     solidHeader = TRUE, status = "warning",
-      #     fluidRow(
-      #       htmlOutput("alerta_modal1")
-      #     ),
-      #     
-      #   )
-      # ),
+      easyClose = TRUE,footer = NULL)
+    ))}
+  )
+  
+  observeEvent(input$tp_plot1,{
+    req(input$tp_plot1=="Alerta")
+    
+    showModal(tags$div(id="modal1", modalDialog(
+      tags$head(tags$style("#modal1 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Descrição dos dados"),
+      htmlOutput("alerta_modal1"),
+      tags$hr(),
+      h3("Nota metodológica"),
+      downloadButton("pdf", label = "Download", class = NULL,icon = icon("download")),
+      tags$span(style = "color:blue"),
       easyClose = TRUE,footer = NULL)
     ))}
   )
   
   observeEvent(input$tp_plot2,{
-    req(input$tp_plot1=="Download")
+    req(input$tp_plot2=="Download")
     
     showModal(tags$div(id="modal2", modalDialog(
       tags$head(tags$style("#modal2 .modal-header {background-color: #215264; text-align: center}")),
       title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
       htmlOutput("alerta_modal2"),
-      hr(),
+      br(),
       selectInput("format2","Formato:",c(".xlsx",".csv")),
       downloadButton("data2", label = "Download", class = NULL,icon = icon("download")),
       tags$span(style = "color:blue"),
@@ -452,14 +485,29 @@ server <- function(input, output, session) {
     ))}
   )
   
+  observeEvent(input$tp_plot2,{
+    req(input$tp_plot2=="Alerta")
+    
+    showModal(tags$div(id="modal2", modalDialog(
+      tags$head(tags$style("#modal2 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Descrição dos dados"),
+      htmlOutput("alerta_modal2"),
+      tags$hr(),
+      h3("Nota metodológica"),
+      downloadButton("pdf", label = "Download", class = NULL,icon = icon("download")),
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
+    ))}
+  )
+  
   observeEvent(input$tp_plot3,{
-    req(input$tp_plot1=="Download")
+    req(input$tp_plot3=="Download")
     
     showModal(tags$div(id="modal3", modalDialog(
       tags$head(tags$style("#modal3 .modal-header {background-color: #215264; text-align: center}")),
       title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
       htmlOutput("alerta_modal3"),
-      hr(),
+      br(),
       selectInput("format3","Formato:",c(".xlsx",".csv")),
       downloadButton("data3", label = "Download", class = NULL,icon = icon("download")),
       tags$span(style = "color:blue"),
@@ -467,14 +515,29 @@ server <- function(input, output, session) {
     ))}
   )
   
+  observeEvent(input$tp_plot3,{
+    req(input$tp_plot3=="Alerta")
+    
+    showModal(tags$div(id="modal3", modalDialog(
+      tags$head(tags$style("#modal3 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Descrição dos dados"),
+      htmlOutput("alerta_modal3"),
+      tags$hr(),
+      h3("Nota metodológica"),
+      downloadButton("pdf", label = "Download", class = NULL,icon = icon("download")),
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
+    ))}
+  )
+  
   observeEvent(input$tp_plot41,{
-    req(input$tp_plot1=="Download")
+    req(input$tp_plot41=="Download")
     
     showModal(tags$div(id="modal4.1", modalDialog(
       tags$head(tags$style("#modal4.1 .modal-header {background-color: #215264; text-align: center}")),
       title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
       htmlOutput("alerta_modal4.1"),
-      hr(),
+      br(),
       selectInput("format4.1","Formato:",c(".xlsx",".csv")),
       downloadButton("data4.1", label = "Download", class = NULL,icon = icon("download")),
       tags$span(style = "color:blue"),
@@ -482,16 +545,46 @@ server <- function(input, output, session) {
     ))}
   )
   
+  observeEvent(input$tp_plot41,{
+    req(input$tp_plot41=="Alerta")
+    
+    showModal(tags$div(id="modal4.1", modalDialog(
+      tags$head(tags$style("#modal4.1 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Descrição dos dados"),
+      htmlOutput("alerta_modal4.1"),
+      tags$hr(),
+      h3("Nota metodológica"),
+      downloadButton("pdf", label = "Download", class = NULL,icon = icon("download")),
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
+    ))}
+  )
+  
   observeEvent(input$tp_plot6,{
-    req(input$tp_plot1=="Download")
+    req(input$tp_plot6=="Download")
     
     showModal(tags$div(id="modal6", modalDialog(
       tags$head(tags$style("#modal6 .modal-header {background-color: #215264; text-align: center}")),
       title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Download de arquivo"),
       htmlOutput("alerta_modal6"),
-      hr(),
+      br(),
       selectInput("format6","Formato:",c(".xlsx",".csv")),
       downloadButton("data6", label = "Download", class = NULL,icon = icon("download")),
+      tags$span(style = "color:blue"),
+      easyClose = TRUE,footer = NULL)
+    ))}
+  )
+  
+  observeEvent(input$tp_plot6,{
+    req(input$tp_plot6=="Alerta")
+    
+    showModal(tags$div(id="modal6", modalDialog(
+      tags$head(tags$style("#modal6 .modal-header {background-color: #215264; text-align: center}")),
+      title=tags$a(style = "color: white;font-family: Calibri, sans-serif;font-size:20px;font-weight: bold", "Descrição dos dados"),
+      htmlOutput("alerta_modal6"),
+      tags$hr(),
+      h3("Nota metodológica"),
+      downloadButton("pdf", label = "Download", class = NULL,icon = icon("download")),
       tags$span(style = "color:blue"),
       easyClose = TRUE,footer = NULL)
     ))}
@@ -660,6 +753,12 @@ server <- function(input, output, session) {
     HTML(htmlText)
   })
   
+  output$title2 <- renderUI({
+    
+    htmlText = paste("<div style='font-weight: bold';'font-family: Calibri, sans-serif;font-size: 30px';'margin-left: 0.2px'!important;>","Nota metodológica","</div>")
+    HTML(htmlText)
+  })
+  
   output$alerta_modal1 <- renderUI({
     
     fmt1="<div style='font-family: Calibri, sans-serif;font-size: 16px';'margin-left: 0.2px'!important;>"
@@ -801,7 +900,7 @@ server <- function(input, output, session) {
       htmlText = paste0("Número de patentes depositadas por ano do depósito, ", min(input$date)," a ",max(input$date))
     }
     
-    HTML(htmlText)
+    HTML(paste0("<div style='font-family: Calibri, sans-serif;font-size: 26px';>",htmlText,"</div>"))
   })
   
   output$title_plot2 <- renderUI({
@@ -816,7 +915,7 @@ server <- function(input, output, session) {
                           min(input$date)," a ",max(input$date))
         
       }
-      HTML(htmlText)
+      HTML(paste0("<div style='text-align:center;font-family: Calibri, sans-serif;font-size: 26px';>",htmlText,"</div>"))
     }
   })
   
@@ -829,7 +928,7 @@ server <- function(input, output, session) {
       } else if(input$tp_plot3=="Setor"){
         htmlText = paste0("Distribuição proporcional das patentes depositadas segundo status, ",min(input$date)," a ",max(input$date))
       }
-      HTML(htmlText)
+      HTML(paste0("<div style='font-family: Calibri, sans-serif;font-size: 26px';>",htmlText,"</div>"))
     }
   })
   
@@ -848,7 +947,7 @@ server <- function(input, output, session) {
                           ifelse(input$local=="Brasil","brasileira","de algum país das Américas"),", ",min(input$date)," a ",max(input$date))
       }
       
-      HTML(htmlText)
+      HTML(paste0("<div style='font-family: Calibri, sans-serif;font-size: 26px';>",htmlText,"</div>"))
     }
     
   })
@@ -871,7 +970,7 @@ server <- function(input, output, session) {
         htmlText = paste0("Distribuição proporcional das patentes depositadas por tipo de pessoa (física e não física), ",min(input$date)," a ",max(input$date))
       }
 
-      HTML(htmlText)
+      HTML(paste0("<div style='font-family: Calibri, sans-serif;font-size: 26px';>",htmlText,"</div>"))
     }
 
   })
@@ -892,7 +991,7 @@ server <- function(input, output, session) {
         htmlText = paste0("Distribuição proporcional das patentes de depositantes brasileiros com cooperação ", input$coopera,", ",min(input$date)," a ",max(input$date))
       }
       
-      HTML(htmlText)
+      HTML(paste0("<div style='font-family: Calibri, sans-serif;font-size: 26px';>",htmlText,"</div>"))
     }
     
   })
@@ -912,15 +1011,16 @@ server <- function(input, output, session) {
         geom_bar_interactive(stat='identity',aes(tooltip=count),fill="#005266")+
         labs(x=xTitle,y=yTitle)+
         theme_classic()+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 16),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=12),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(fill=guide_legend(nrow=1,byrow=TRUE))+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
         scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
@@ -931,15 +1031,16 @@ server <- function(input, output, session) {
         geom_point_interactive(aes(tooltip=count),color="#005266")+
         labs(x=xTitle,y=yTitle)+
         theme_classic()+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 16),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=12),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(fill=guide_legend(nrow=1,byrow=TRUE))+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1$count)))+
         scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
@@ -1013,15 +1114,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "bottom")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=12),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=ifelse(input$nivel=="Nível 1",2,8),byrow=TRUE))+
           scale_fill_manual("",values = colors)+
           scale_y_continuous(labels = ifelse(input$select2=="Número absoluto",scales::number,scales::percent),expand=c(0,0.05))+
@@ -1036,15 +1138,16 @@ server <- function(input, output, session) {
         labs(x=xTitle,y=yTitle,color=NULL)+
         theme_classic()+
         theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=12),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=ifelse(input$nivel=="Nível 1",2,8),byrow=TRUE))+
         scale_color_manual("",values = colors)+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1$count)))+
@@ -1067,18 +1170,15 @@ server <- function(input, output, session) {
         scale_fill_manual("",values = colors)+
         coord_polar(theta="y")+
         xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 16),
-              text=element_text(size = 16),
+        theme_void()+
+        theme(legend.text=element_text(size = 16),
+              text=element_text(size = 20),
               title = element_text(size = 16),
               plot.caption = element_text(size=12),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=ifelse(input$nivel=="Nível 1",2,8),byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
+        theme(legend.position = "right")
       
     }
     girafe(ggobj = p,width_svg = 20,height_svg = 8)
@@ -1116,15 +1216,16 @@ server <- function(input, output, session) {
         labs(x=xTitle,y=yTitle,fill="")+
         theme_classic()+
         theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 16),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(fill=guide_legend(nrow=1,byrow=TRUE))+
         scale_fill_manual("",values = colors)+
         scale_y_continuous(labels = ifelse(input$select3=="Número absoluto",scales::number,scales::percent),expand=c(0,0.05))+
@@ -1139,15 +1240,16 @@ server <- function(input, output, session) {
         labs(x=xTitle,y=yTitle,color=NULL)+
         theme_classic()+
         theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 16),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
         scale_color_manual("",values = colors)+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1$count)))+
@@ -1168,18 +1270,15 @@ server <- function(input, output, session) {
         scale_fill_manual("",values = colors)+
         coord_polar(theta="y")+
         xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 20),
+        theme_void()+
+        theme(legend.text=element_text(size = 16),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
-        guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
+        guides(color=guide_legend(nrow=1,byrow=TRUE))
+        theme(legend.position = "right")
       
     }
     girafe(ggobj = p,width_svg = 20,height_svg = 8)
@@ -1212,15 +1311,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "none")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=1,byrow=TRUE))+
           scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
           scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
@@ -1238,15 +1338,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "bottom")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=1,byrow=TRUE))+
           scale_fill_manual("",values=c("#005266","#7197A4"))+
           scale_y_continuous(labels = scales::percent,expand=c(0,0.05))+
@@ -1263,15 +1364,16 @@ server <- function(input, output, session) {
         labs(x=xTitle,y=yTitle,color=NULL)+
         theme_classic()+
         theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
         scale_color_manual("",values = colors)+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1[which(db1$cat==1),]$count)))+
@@ -1296,18 +1398,15 @@ server <- function(input, output, session) {
         coord_polar(theta="y")+
         labs(fill="",color="")+
         xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 18),
+        theme_void()+
+        theme(legend.text=element_text(size = 16),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
+        theme(legend.position = "right")
       
     }
     
@@ -1339,15 +1438,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "none")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=1,byrow=TRUE))+
           scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
           scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
@@ -1364,15 +1464,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "bottom")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=1,byrow=TRUE))+
           scale_fill_manual("",values=c("#005266","#7197A4","grey70"))+
           scale_y_continuous(labels = scales::percent,expand=c(0,0.05))+
@@ -1389,15 +1490,16 @@ server <- function(input, output, session) {
         labs(x=xTitle,y=yTitle,color=NULL)+
         theme_classic()+
         theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
         scale_color_manual("",values = colors)+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1[which(db1$cat==1),]$count)))+
@@ -1423,18 +1525,15 @@ server <- function(input, output, session) {
         coord_polar(theta="y")+
         labs(fill="",color="")+
         xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 18),
+        theme_void()+
+        theme(legend.text=element_text(size = 16),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
+        theme(legend.position = "right")
       
     }
     
@@ -1467,15 +1566,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "none")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=1,byrow=TRUE))+
           scale_y_continuous(labels = scales::number,expand=c(0,0.05))+
           scale_x_continuous(breaks = seq(min(input$date),max(input$date),1))
@@ -1492,15 +1592,16 @@ server <- function(input, output, session) {
           labs(x=xTitle,y=yTitle,fill="")+
           theme_classic()+
           theme(legend.position = "bottom")+
-          theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-                axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-                axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-                axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-                legend.text=element_text(size = 12),
+          theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+                axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+                axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+                legend.text=element_text(size = 20),
                 text=element_text(size = 16),
                 title = element_text(size = 16),
                 plot.caption = element_text(size=16),
-                strip.text = element_text(size=16))+
+                strip.text = element_text(size=16),
+                axis.line.y = element_blank())+
           guides(fill=guide_legend(nrow=1,byrow=TRUE))+
           scale_fill_manual("",values=c("#005266","#7197A4","grey70"))+
           scale_y_continuous(labels = scales::percent,expand=c(0,0.05))+
@@ -1517,15 +1618,16 @@ server <- function(input, output, session) {
         labs(x=xTitle,y=yTitle,color=NULL)+
         theme_classic()+
         theme(legend.position = "bottom")+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 12),
+        theme(axis.text.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              axis.text.y = element_text(color = "grey20", size = 20, angle = 0, hjust = 1, vjust = 0, face = "plain",family="Calibri, sans-serif"),  
+              axis.title.x = element_text(color = "grey20", size = 20, angle = 0, hjust = .5, vjust = 0, face = "plain",family="Calibri, sans-serif"),
+              axis.title.y = element_text(color = "grey20", size = 20, angle = 90, hjust = .5, vjust = .5, face = "plain",family="Calibri, sans-serif"),
+              legend.text=element_text(size = 20),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
         scale_color_manual("",values = colors)+
         scale_y_continuous(labels = scales::number,expand=c(0,0.05),limits = c(0,max(db1[which(db1$cat==1),]$count)))+
@@ -1552,18 +1654,15 @@ server <- function(input, output, session) {
         coord_polar(theta="y")+
         labs(fill="",color="")+
         xlim(c(2, 4))+
-        theme(axis.text.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = .5, face = "plain"),
-              axis.text.y = element_text(color = "grey20", size = 16, angle = 0, hjust = 1, vjust = 0, face = "plain"),  
-              axis.title.x = element_text(color = "grey20", size = 16, angle = 0, hjust = .5, vjust = 0, face = "plain"),
-              axis.title.y = element_text(color = "grey20", size = 16, angle = 90, hjust = .5, vjust = .5, face = "plain"),
-              legend.text=element_text(size = 18),
+        theme_void()+
+        theme(legend.text=element_text(size = 16),
               text=element_text(size = 16),
               title = element_text(size = 16),
               plot.caption = element_text(size=16),
-              strip.text = element_text(size=16))+
+              strip.text = element_text(size=16),
+              axis.line.y = element_blank())+
         guides(color=guide_legend(nrow=1,byrow=TRUE))+
-        theme_void()+
-        theme(legend.position = "bottom")
+        theme(legend.position = "right")
       
     }
     
@@ -2236,10 +2335,19 @@ server <- function(input, output, session) {
     }
   )
   
+  output$pdf <- downloadHandler(
+    filename = function() {
+      "Nota metodológica.pdf"
+    },
+    content = function(file) {
+      file.copy(file.path("Nota Metodológica.pdf"), file)
+    }
+  )
 }
 
 shinyApp(ui, server)
 
 #runApp(list(ui = ui, server = server))
+
 
 
